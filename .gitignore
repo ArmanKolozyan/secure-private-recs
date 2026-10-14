@@ -1,0 +1,16 @@
+# Build and test artifacts
+bin/
+*.test
+*.prof
+scratch/
+scratch.log
+
+# Experiment data and raw results
+data/
+results/raw/
+
+# Docs
+notes/
+
+# macOS stuff
+.DS_Store
