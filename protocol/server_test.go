@@ -107,7 +107,7 @@ func runPowerIt(U *Matrix[uint64], params *PowerItParams, shareName string, veri
 			s.PowerIteration(params, true, true)
 
 			if id == 0 {
-				WriteMatrixToS3(s.Item_emb, shareName+"items.csv")
+				WriteMatrixToFile(s.Item_emb, shareName+"items.csv")
 			}
 
 			wg.Done()
@@ -117,7 +117,7 @@ func runPowerIt(U *Matrix[uint64], params *PowerItParams, shareName string, veri
 
 	wg.Wait()
 
-	B := ReadMatrixFromS3(shareName + "items.csv")
+	B := ReadMatrixFromFile(shareName + "items.csv")
 	A := MatrixMul(U, B.Transpose())
 	C := MatrixMul(A, B)
 	MatrixSignedRoundInPlace(C, (1 << (params.N_decimals * 2)))
