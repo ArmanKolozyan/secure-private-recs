@@ -2,7 +2,6 @@ package share
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
 	"io"
 	"os"
 	"runtime"
@@ -86,11 +85,6 @@ func (p *progressWriterAt) WriteAt(b []byte, off int64) (int, error) {
 	return n, err
 }
 
-// openMemFile returns an *os.File whose pages live only in RAM.
-func openMemFile(name string) (*os.File, error) {
-	fd, err := unix.MemfdCreate(name, unix.MFD_CLOEXEC)
-	if err != nil {
-		return nil, fmt.Errorf("memfd_create: %w", err)
-	}
-	return os.NewFile(uintptr(fd), name), nil
-}
+// openMemFile is defined per platform: utils_linux.go (memfd_create, pages in
+// RAM) and utils_other.go (unlinked temporary file, for development builds on
+// other systems such as macOS).
