@@ -1,6 +1,6 @@
 package share
 
-// #cgo CFLAGS: -O3 -march=native -msse4.1 -maes -mavx2 -mavx -I../uint128
+// #cgo CFLAGS: -O3 -march=haswell -msse4.1 -maes -mavx2 -mavx -I../uint128
 // #include "matrix.h"
 import "C"
 

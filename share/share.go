@@ -1,6 +1,6 @@
 package share
 
-// #cgo CFLAGS: -O3 -march=native -I../uint128
+// #cgo CFLAGS: -O3 -march=haswell -I../uint128
 // #include "uint128.h"
 import "C"
 
