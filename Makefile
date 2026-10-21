@@ -7,7 +7,7 @@ GOENV := GOARCH=amd64 CGO_ENABLED=1
 
 # Packages whose tests need no network or AWS credentials
 # (except for TestS3, which is skipped below).
-FAST_PKGS := ./uint128 ./rand ./dcf ./dmsb ./multdpf ./net ./share
+FAST_PKGS := ./uint128 ./rand ./dcf ./dmsb ./multdpf ./net ./share ./experiments
 
 # These targets are commands, not files to build, so make always runs them.
 .PHONY: build test-share test-fast test-protocol run clean
