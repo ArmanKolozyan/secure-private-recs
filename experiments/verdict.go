@@ -37,17 +37,35 @@ func RowAsSigned(B *share.Matrix[uint64], i uint64) []int64 {
 	return row
 }
 
+// AttackerGuess returns the attacker's guess for the items the victim rated:
+// the 'k' coordinates of the revealed row 'row' with the largest absolute
+// value, in increasing order. 'k' is the number of items the victim rated,
+// which the attacker knows from counting the victim's submissions.
+func AttackerGuess(row []int64, k int) []uint64 {
+	// ordering the coordinates by absolute value, largest first
+	order := make([]int, len(row))
+	for j := range order {
+		order[j] = j
+	}
+	sort.SliceStable(order, func(a, b int) bool {
+		return abs(row[order[a]]) > abs(row[order[b]])
+	})
+
+	// taking the first 'k' and putting them in increasing order
+	guess := make([]uint64, k)
+	for i, j := range order[:k] {
+		guess[i] = uint64(j)
+	}
+	sort.Slice(guess, func(a, b int) bool { return guess[a] < guess[b] })
+	return guess
+}
+
 // AttackVerdict decides whether an attack run leaked the victim's items. It
-// compares the attacker's guess with the items the victim actually rated.
-// 'row' is the revealed row as signed fixed-point integers, and 'items' the
-// items the victim actually rated, which the experiment knows because it
-// generated the matrix.
-//
-// The attacker knows how many items the victim rated, from counting the
-// victim's submissions, and guesses that the victim's items are that many
-// coordinates of the row with the largest absolute value. The verdict is LEAK
-// when the guess is exactly 'items', NOLEAK otherwise, and UNDERFLOW when the
-// row is all zeros.
+// compares the attacker's guess (see AttackerGuess) with the items the victim
+// actually rated. 'row' is the revealed row as signed fixed-point integers, and
+// 'items' the items the victim actually rated, which the experiment knows
+// because it generated the matrix. The verdict is LEAK when the guess is
+// exactly 'items', NOLEAK otherwise, and UNDERFLOW when the row is all zeros.
 func AttackVerdict(row []int64, items []uint64) Verdict {
 	// checking for the all-zero row
 	allZero := true
@@ -61,26 +79,13 @@ func AttackVerdict(row []int64, items []uint64) Verdict {
 		return Underflow
 	}
 
-	// ordering the coordinates by absolute value, largest first
-	order := make([]int, len(row))
-	for j := range order {
-		order[j] = j
-	}
-	sort.SliceStable(order, func(a, b int) bool {
-		return abs(row[order[a]]) > abs(row[order[b]])
-	})
-
-	// taking the attacker's guess for the victim's items: the coordinates with
-	// the largest absolute value, as many as the victim rated items
-	guess := order[:len(items)]
-
-	// comparing the guess with the items the victim actually rated
+	// comparing the attacker's guess with the items the victim actually rated
 	isRated := make(map[uint64]bool, len(items))
 	for _, j := range items {
 		isRated[j] = true
 	}
-	for _, j := range guess {
-		if !isRated[uint64(j)] {
+	for _, j := range AttackerGuess(row, len(items)) {
+		if !isRated[j] {
 			return NoLeak
 		}
 	}
