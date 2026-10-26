@@ -14,7 +14,7 @@
 // Λ = 2^50. Without -exponent nothing is added, which gives the baseline: an
 // honest run, whose revealed row should not expose the victim's items.
 //
-//	make run CMD=./experiments/cmd/attack ARGS="-matrix 80x24 -exponent 50"
+//	make run CMD=./attacks/leakageAttack/cmd/attack ARGS="-matrix 80x24 -exponent 50"
 package main
 
 import (
@@ -22,13 +22,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/NudgeArtifact/private-recs/experiments"
+	leakageattack "github.com/NudgeArtifact/private-recs/attacks/leakageAttack"
 	"github.com/NudgeArtifact/private-recs/params"
 )
 
 func main() {
 	// reading the command-line flags
-	name := flag.String("matrix", "80x24", "name of a matrix in experiments.Matrices")
+	name := flag.String("matrix", "80x24", "name of a synthetic matrix, as listed in Matrices")
 	paramsPath := flag.String("params", "params/cheap_params.json", "power-iteration parameters")
 	exponent := flag.Int("exponent", -1, "inject Λ = 2^exponent, from 0 to 127; -1 means no injection")
 	randomStart := flag.Bool("random-start", false, "start power iteration from Nudge's random vector instead of all-ones")
@@ -42,14 +42,14 @@ func main() {
 	}
 
 	// looking up the matrix by name
-	spec, ok := experiments.Matrices[*name]
+	spec, ok := leakageattack.Matrices[*name]
 	if !ok {
 		fmt.Fprintf(os.Stderr, "unknown matrix %q\n", *name)
 		os.Exit(2)
 	}
 
 	// building the matrix
-	U := experiments.Synthetic(spec)
+	U := leakageattack.Synthetic(spec)
 
 	// loading the parameters and setting the start vector of power iteration
 	p := params.FromJSON(*paramsPath)
@@ -68,18 +68,18 @@ func main() {
 	for _, v := range spec.Victims {
 		// running Nudge with the injection aimed at this victim, and taking the
 		// first model row the servers reveal
-		row := experiments.AttackRun(U, p, v.Row, *exponent)
+		row := leakageattack.AttackRun(U, p, v.Row, *exponent)
 
 		// reading the items the victim actually rated, which only the experiment
 		// knows, to judge the attacker's guess
-		items := experiments.ItemsRatedBy(U, v.Row)
+		items := leakageattack.ItemsRatedBy(U, v.Row)
 
 		// printing the revealed row, the attacker's guess for the victim's items,
 		// the items the victim actually rated, and the verdict
 		fmt.Printf("matrix %s, %s start, %s, victim user %d\n", *name, start, injection, v.Row)
 		fmt.Printf("  revealed row:     %v\n", row)
-		fmt.Printf("  attacker's guess: %v\n", experiments.AttackerGuess(row, len(items)))
+		fmt.Printf("  attacker's guess: %v\n", leakageattack.AttackerGuess(row, len(items)))
 		fmt.Printf("  items rated:      %v\n", items)
-		fmt.Printf("  verdict:          %s\n", experiments.AttackVerdict(row, items))
+		fmt.Printf("  verdict:          %s\n", leakageattack.AttackVerdict(row, items))
 	}
 }

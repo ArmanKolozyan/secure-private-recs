@@ -1,4 +1,4 @@
-package experiments
+package leakageattack
 
 import (
 	"math/rand"

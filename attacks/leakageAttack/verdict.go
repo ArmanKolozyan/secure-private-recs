@@ -1,10 +1,4 @@
-package experiments
-
-import (
-	"sort"
-
-	"github.com/NudgeArtifact/private-recs/share"
-)
+package leakageattack
 
 // Verdict is the outcome of one run of the attack, judged from the model row
 // the servers reveal.
@@ -24,41 +18,6 @@ const (
 	// CRASH: the run died for any other reason
 	Crash Verdict = "CRASH"
 )
-
-// RowAsSigned returns row 'i' of a matrix revealed by Nudge as signed numbers.
-// Nudge stores a negative value in a uint64 in two's complement, so the
-// conversion is a reinterpretation of the bits.
-// Example: row [5, 18446744073709551615] becomes [5, -1].
-func RowAsSigned(B *share.Matrix[uint64], i uint64) []int64 {
-	row := make([]int64, B.NCols())
-	for j := range row {
-		row[j] = int64(*B.Get(i, uint64(j)))
-	}
-	return row
-}
-
-// AttackerGuess returns the attacker's guess for the items the victim rated:
-// the 'k' coordinates of the revealed row 'row' with the largest absolute
-// value, in increasing order. 'k' is the number of items the victim rated,
-// which the attacker knows from counting the victim's submissions.
-func AttackerGuess(row []int64, k int) []uint64 {
-	// ordering the coordinates by absolute value, largest first
-	order := make([]int, len(row))
-	for j := range order {
-		order[j] = j
-	}
-	sort.SliceStable(order, func(a, b int) bool {
-		return abs(row[order[a]]) > abs(row[order[b]])
-	})
-
-	// taking the first 'k' and putting them in increasing order
-	guess := make([]uint64, k)
-	for i, j := range order[:k] {
-		guess[i] = uint64(j)
-	}
-	sort.Slice(guess, func(a, b int) bool { return guess[a] < guess[b] })
-	return guess
-}
 
 // AttackVerdict decides whether an attack run leaked the victim's items. It
 // compares the attacker's guess (see AttackerGuess) with the items the victim
@@ -90,12 +49,4 @@ func AttackVerdict(row []int64, items []uint64) Verdict {
 		}
 	}
 	return Leak
-}
-
-// abs returns the absolute value of 'x'.
-func abs(x int64) int64 {
-	if x < 0 {
-		return -x
-	}
-	return x
 }

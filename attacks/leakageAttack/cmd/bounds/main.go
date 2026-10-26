@@ -6,7 +6,7 @@
 // HonestRun), and the lowest and highest injection that should work. With
 // -csv it also writes them as a table.
 //
-//	make run CMD=./experiments/cmd/bounds ARGS="-matrix 80x24"
+//	make run CMD=./attacks/leakageAttack/cmd/bounds ARGS="-matrix 80x24"
 package main
 
 import (
@@ -14,35 +14,35 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/NudgeArtifact/private-recs/experiments"
+	leakageattack "github.com/NudgeArtifact/private-recs/attacks/leakageAttack"
 	"github.com/NudgeArtifact/private-recs/params"
 )
 
 func main() {
-	name := flag.String("matrix", "80x24", "name of a matrix in experiments.Matrices")
+	name := flag.String("matrix", "80x24", "name of a synthetic matrix, as listed in Matrices")
 	paramsPath := flag.String("params", "params/cheap_params.json", "power-iteration parameters")
 	out := flag.String("csv", "", "if set, write the table to this CSV file")
 	flag.Parse()
 
 	// looking up the matrix by name and building it
-	spec, ok := experiments.Matrices[*name]
+	spec, ok := leakageattack.Matrices[*name]
 	if !ok {
 		fmt.Fprintf(os.Stderr, "unknown matrix %q\n", *name)
 		os.Exit(2)
 	}
 	p := params.FromJSON(*paramsPath)
-	U := experiments.Synthetic(spec)
+	U := leakageattack.Synthetic(spec)
 
 	// computing the largest eigenvalue and running Nudge honestly to get h
-	a := experiments.ExactValues(*name, U)
-	h := experiments.HonestRun(U, p)
+	a := leakageattack.ExactValues(*name, U)
+	h := leakageattack.HonestRun(U, p)
 
 	fmt.Printf("matrix %s: %d users x %d items, S = %d ratings\n", a.Name, a.Users, a.Items, a.S)
 	fmt.Printf("  lambda1 = %.3f, |q1|_inf = %.4f, lambda1*|q1|_inf = %.3f\n",
 		a.Lambda1, a.Q1Inf, a.Lambda1*a.Q1Inf)
 
 	// computing and printing the bounds for each victim
-	var victims []experiments.VictimBounds
+	var victims []leakageattack.VictimBounds
 	for _, v := range spec.Victims {
 		b := a.Bounds(U, v.Row, h, p)
 		victims = append(victims, b)
@@ -54,7 +54,7 @@ func main() {
 
 	// writing the same values as a CSV table when a file was given
 	if *out != "" {
-		if err := experiments.WriteBoundsCSV(*out, a, victims); err != nil {
+		if err := leakageattack.WriteBoundsCSV(*out, a, victims); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

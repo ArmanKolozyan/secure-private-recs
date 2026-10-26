@@ -1,4 +1,4 @@
-package experiments
+package leakageattack
 
 import (
 	"encoding/csv"
@@ -6,8 +6,9 @@ import (
 	"os"
 )
 
-// Run is one line of the table with one line per run of the attack.
-type Run struct {
+// Result is the outcome of one run of the attack, which makes one line of the
+// results table.
+type Result struct {
 	Matrix   string  // name of the matrix, as in Matrices
 	Victim   uint64  // the victim's row
 	Exponent int     // the injection is Λ = 2^Exponent, and -1 means no injection (an honest run)
@@ -15,26 +16,26 @@ type Run struct {
 	Verdict  Verdict // outcome of the run, see AttackVerdict
 }
 
-// RunHeader is the column list of that table.
-var RunHeader = []string{"matrix", "victim", "exponent", "start", "verdict"}
+// ResultHeader is the column list of the results table.
+var ResultHeader = []string{"matrix", "victim", "exponent", "start", "verdict"}
 
-// Record returns the run as one CSV line, in the order of RunHeader.
-func (r Run) Record() []string {
+// Record returns the result as one CSV line, in the order of ResultHeader.
+func (r Result) Record() []string {
 	return []string{r.Matrix, fmt.Sprint(r.Victim), fmt.Sprint(r.Exponent), r.Start, string(r.Verdict)}
 }
 
-// WriteRunsCSV writes the table of runs to a file.
-func WriteRunsCSV(path string, runs []Run) error {
+// WriteResultsCSV writes the results table to a file.
+func WriteResultsCSV(path string, results []Result) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 	w := csv.NewWriter(f)
-	if err := w.Write(RunHeader); err != nil {
+	if err := w.Write(ResultHeader); err != nil {
 		return err
 	}
-	for _, r := range runs {
+	for _, r := range results {
 		if err := w.Write(r.Record()); err != nil {
 			return err
 		}
