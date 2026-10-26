@@ -163,6 +163,12 @@ func PowerIteration(U0, U1, U2 *Matrix[Share128], params *PowerItParams, pool *P
 					trunc_saved += 1
 				}
 
+				// handing the additive shares of the product U * v to an experiment right
+				// before they are reshared, if one is attached (see LastReshareHook)
+				if LastReshareHook != nil && component == 0 && iter == params.N_iters-1 {
+					LastReshareHook(u0_add, u1_add, u2_add)
+				}
+
 				// Re-sharing: turn additive shares of [u] into RSS ones
 				MatrixAdditiveToRSSDst(u0_add, u1_add, u2_add, u0, u1, u2, pool, perf)
 			}
