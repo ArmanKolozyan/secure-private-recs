@@ -11,36 +11,34 @@ import (
 	"github.com/NudgeArtifact/private-recs/share"
 )
 
-// Exact holds the real-number values of an honest power iteration on the
-// ratings matrix U, computed here from the plaintext matrix.
-// The protocol works on secret shares of fixed-point integers
-// and only approximates these numbers.
+// Exact holds the largest eigenvalue of the co-rating matrix of the ratings
+// matrix 'U' and the largest coordinate of its dominant eigenvector, computed
+// here from the plaintext matrix. Nudge's power iteration only approximates
+// the dominant eigenvector and does not output the eigenvalue.
 //
-// It serves two purposes:
-//   - whether an injection Λ succeeds depends on how Λ compares with the
-//     honest values in the attacked iteration, so from the vector of the
-//     last iteration (field 'H' below) the experiment computes the exact
-//     smallest and largest Λ that work for a victim
-//     (see Bounds). Running the attack for many values of Λ then shows
-//     whether it indeed starts and stops working at those values.
-//   - the row an honest protocol run reveals must agree with that vector
-//     scaled to length 1 (field 'Opened' below), which checks that the
-//     experiment drives the protocol correctly.
+// These values are reported for two comparisons:
+//   - HOn + HOff versus 2 * Lambda1 * Q1Inf. The first is what the injection
+//     must exceed to work whatever the signs of the honest values. The second
+//     estimates the same from the eigenvalue and eigenvector alone, since every
+//     honest value is about Lambda1 times a coordinate of the dominant
+//     eigenvector. The comparison shows how good that estimate is.
+//   - Lambda1 * Q1Inf versus S. The first is about the largest honest value.
+//     The attacker cannot compute it without the matrix, so LowestAttacker
+//     uses S instead, which is always at least as large. Their ratio is the
+//     factor by which the attacker's lower bound is larger.
 type Exact struct {
 	Name    string
 	Users   uint64
 	Items   uint64
-	S       uint64    // total number of ratings
-	Lambda1 float64   // largest eigenvalue of the co-rating matrix M = UᵀU
-	Lambda2 float64   // second largest eigenvalue of M
-	Q1      []float64 // unit eigenvector of M for Lambda1: the dominant rating pattern
-	Q1Inf   float64   // largest coordinate of Q1 in absolute value
-	H       []float64 // Mv, in the last iteration of an honest run
-	Opened  []float64 // H scaled to length 1: the row an honest run reveals in the clear
+	S       uint64  // total number of ratings
+	Lambda1 float64 // largest eigenvalue of the co-rating matrix M = UᵀU
+	Q1Inf   float64 // largest coordinate, in absolute value, of the eigenvector of M for Lambda1 (length 1)
 }
 
-// VictimBounds holds, for one victim, the honest values (entries of 'H') on
-// the items the victim rated and on the other items, and the bounds on the
+// VictimBounds holds, for one victim, the honest values (entries of the vector
+// h that enters normalization in the last iteration of an honest run, see
+// HonestRun) on the items the victim rated and on the other items, and the
+// bounds on the
 // integer Λ that the attacker adds. Since these bounds range over many
 // powers of two, each is given as the exponent of two (i.e., log2(Λ)): a bound of
 // 45.84 means Λ = 2^45.84. A lower bound of -Inf holds for every positive Λ.
@@ -57,57 +55,40 @@ type VictimBounds struct {
 	HOn            float64  // largest honest value (absolute) on the victim's items
 	HOff           float64  // largest honest value (absolute) on the other items
 	HOnMin         float64  // smallest honest value (absolute) on the victim's items
-	LowestCase1    float64  // if all honest values are >= 0, the attack works for Λ > 2^(2 * N_decimals) * (HOff - HOnMin)
+	LowestCase1    float64  // if all honest values are >= 0, the attack works for Λ > 2^(2 * N_decimals) * (HOff - HOnMin). NaN when some honest value is negative, since the bound then does not apply
 	LowestCase2    float64  // whatever their signs, it works for Λ > 2^(2 * N_decimals) * (HOn + HOff)
 	LowestAttacker float64  // knowing only the total number of ratings S, it works for Λ > 2^(2 * N_decimals) * 2S
 	Highest        float64  // beyond Λ = 2^(Norm_decimals + 2 * N_decimals) / sqrt(number of items the victim rated), the stored reciprocal of the vector's length rounds to 0 and the revealed row is all zeros
 }
 
 // ExactValues computes the Exact values (see the struct above) for the matrix 'U'.
-// 'p' supplies the number of power-iteration steps per component. The injection targets the last step.
-func ExactValues(name string, U *share.Matrix[uint64], p *params.PowerItParams) *Exact {
+func ExactValues(name string, U *share.Matrix[uint64]) *Exact {
 	n := int(U.NCols())
 	a := &Exact{Name: name, Users: U.NRows(), Items: U.NCols(), S: Ratings(U)}
 
 	// building the co-rating matrix
 	M := coRating(U)
 
-	// finding the largest eigenvalue with its eigenvector, then the second
-	// eigenvalue by excluding the direction of the first eigenvector
-	a.Lambda1, a.Q1 = topEigen(M, n, nil)
-	a.Lambda2, _ = topEigen(M, n, a.Q1)
-	for _, q := range a.Q1 {
+	// finding the largest eigenvalue and its eigenvector
+	lambda1, q1 := topEigen(M, n)
+	a.Lambda1 = lambda1
+	for _, q := range q1 {
 		a.Q1Inf = math.Max(a.Q1Inf, math.Abs(q))
 	}
-
-	// replaying the honest protocol in real arithmetic: a normalized all-ones
-	// start, then N_iters times "multiply by M, rescale to length 1"
-	v := make([]float64, n)
-	for j := range v {
-		v[j] = 1 / math.Sqrt(float64(n))
-	}
-	var h []float64
-	for it := 0; it < p.N_iters; it++ {
-		// computing h = M * v, the vector that enters normalization
-		h = matVec(M, n, v)
-		// rescaling it to length 1 to get the next vector
-		v = unit(h)
-	}
-	a.H = h      // the vector of the last iteration, where the injection lands
-	a.Opened = v // the honest revealed row, h scaled to length 1
 	return a
 }
 
 // Bounds computes, for the victim in row 'row', the honest values on and off
-// the victim's items and the bounds on the injection.
-func (a *Exact) Bounds(U *share.Matrix[uint64], row uint64, p *params.PowerItParams) VictimBounds {
+// the victim's items, taken from 'h' (see HonestRun), and the bounds on the
+// injection.
+func (a *Exact) Bounds(U *share.Matrix[uint64], row uint64, h []float64, p *params.PowerItParams) VictimBounds {
 	b := VictimBounds{Row: row, RatedItems: ItemsRatedBy(U, row), HOnMin: math.Inf(1)}
 	rated := make([]bool, a.Items)
 	for _, j := range b.RatedItems {
 		rated[j] = true
 	}
 	// taking the largest and smallest honest value on the victim's items, and the largest on the others
-	for j, hj := range a.H {
+	for j, hj := range h {
 		x := math.Abs(hj)
 		if rated[j] {
 			b.HOn = math.Max(b.HOn, x)
@@ -120,7 +101,18 @@ func (a *Exact) Bounds(U *share.Matrix[uint64], row uint64, p *params.PowerItPar
 	// fractional bits, so an integer Λ is worth Λ / 2^(2 * N_decimals) in real
 	// units. A real bound 'a' therefore translates to log2(Λ) = 2 * N_decimals + log2(a).
 	scale := float64(2 * p.N_decimals)
-	b.LowestCase1 = scale + log2(b.HOff-b.HOnMin)
+	// checking that every honest value is at least 0, which LowestCase1 assumes
+	allNonNegative := true
+	for _, hj := range h {
+		if hj < 0 {
+			allNonNegative = false
+			break
+		}
+	}
+	b.LowestCase1 = math.NaN()
+	if allNonNegative {
+		b.LowestCase1 = scale + log2(b.HOff-b.HOnMin)
+	}
 	b.LowestCase2 = scale + log2(b.HOn+b.HOff)
 	b.LowestAttacker = scale + log2(2*float64(a.S))
 	b.Highest = float64(p.Norm_decimals+2*p.N_decimals) - 0.5*math.Log2(float64(len(b.RatedItems)))
@@ -145,37 +137,18 @@ func coRating(U *share.Matrix[uint64]) []float64 {
 
 // topEigen returns the largest eigenvalue of the symmetric matrix 'M' and its
 // eigenvector of length 1 via power iteration, run until the eigenvalue
-// estimate no longer changes. This is a tool of the experiment for getting
-// the exact values, not a replay of Nudge's power iteration, which runs a
-// fixed number of steps (see ExactValues).
-//
-// Both 'v' and '-v' are valid eigenvectors. To make the result reproducible,
-// the vector is flipped when the sum of its coordinates is negative, so the
-// returned eigenvector always has a non-negative sum. For the co-rating matrix,
-// whose dominant eigenvector has all coordinates of one sign, this makes them
-// all non-negative.
-//
-// If 'exclude' is not nil, that direction is removed from the vector after
-// every step, so the iteration converges to the largest eigenvalue, and its
-// eigenvector, among the remaining directions.
-func topEigen(M []float64, n int, exclude []float64) (float64, []float64) {
+// estimate no longer changes.
+func topEigen(M []float64, n int) (float64, []float64) {
 	v := make([]float64, n)
 	// starting from the all-ones vector
 	for j := range v {
 		v[j] = 1
-	}
-	if exclude != nil {
-		project(v, exclude)
 	}
 	v = unit(v)
 	lambda := 0.0
 	for it := 0; it < 100000; it++ {
 		// multiplying by M, which makes the dominant direction grow fastest
 		w := matVec(M, n, v)
-		if exclude != nil {
-			// keeping the vector orthogonal to the eigenvector already found
-			project(w, exclude)
-		}
 		// estimating the eigenvalue, then rescaling to length 1
 		l := dot(v, w)
 		v = unit(w)
@@ -185,11 +158,6 @@ func topEigen(M []float64, n int, exclude []float64) (float64, []float64) {
 			break
 		}
 		lambda = l
-	}
-	if sum(v) < 0 {
-		for j := range v {
-			v[j] = -v[j]
-		}
 	}
 	return lambda, v
 }
@@ -217,15 +185,6 @@ func dot(a, b []float64) float64 {
 	return s
 }
 
-// sum returns the sum of the coordinates of 'a'.
-func sum(a []float64) float64 {
-	s := 0.0
-	for _, x := range a {
-		s += x
-	}
-	return s
-}
-
 // unit returns 'a' scaled to length 1.
 func unit(a []float64) []float64 {
 	norm := math.Sqrt(dot(a, a))
@@ -234,14 +193,6 @@ func unit(a []float64) []float64 {
 		u[j] = a[j] / norm
 	}
 	return u
-}
-
-// project removes the component of 'v' along the unit vector 'q', in place.
-func project(v, q []float64) {
-	c := dot(v, q)
-	for j := range v {
-		v[j] -= c * q[j]
-	}
 }
 
 // log2 returns the base-2 logarithm of 'x', and -Inf for x <= 0 (used for
@@ -255,7 +206,7 @@ func log2(x float64) float64 {
 
 // BoundsHeader is the column list of the table with one line per matrix and victim.
 var BoundsHeader = []string{"matrix", "m", "n", "S", "victim", "k",
-	"lambda1", "lambda2", "q1_inf", "H_on", "H_off", "h_on",
+	"lambda1", "q1_inf", "H_on", "H_off", "h_on",
 	"lowest_case1_bits", "lowest_case2_bits", "lowest_attacker_bits", "highest_bits"}
 
 // BoundsRecord is one line of that table.
@@ -263,7 +214,7 @@ func BoundsRecord(a *Exact, b VictimBounds) []string {
 	f := func(x float64) string { return strconv.FormatFloat(x, 'f', 4, 64) }
 	return []string{a.Name, fmt.Sprint(a.Users), fmt.Sprint(a.Items), fmt.Sprint(a.S),
 		fmt.Sprint(b.Row), fmt.Sprint(len(b.RatedItems)),
-		f(a.Lambda1), f(a.Lambda2), f(a.Q1Inf), f(b.HOn), f(b.HOff), f(b.HOnMin),
+		f(a.Lambda1), f(a.Q1Inf), f(b.HOn), f(b.HOff), f(b.HOnMin),
 		f(b.LowestCase1), f(b.LowestCase2), f(b.LowestAttacker), f(b.Highest)}
 }
 
