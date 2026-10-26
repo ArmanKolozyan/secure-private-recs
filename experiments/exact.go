@@ -119,6 +119,14 @@ func (a *Exact) Bounds(U *share.Matrix[uint64], row uint64, h []float64, p *para
 	return b
 }
 
+// AttackerExponent returns the exponent e of the attacker's choice Λ = 2^e: the
+// middle, in bits, of the range from LowestAttacker to Highest, rounded to an
+// integer. The attacker can compute it, since both ends depend only on the
+// total number of ratings and on how many items the victim rated.
+func (b VictimBounds) AttackerExponent() int {
+	return int(math.Round((b.LowestAttacker + b.Highest) / 2))
+}
+
 // coRating returns the co-rating matrix M = UᵀU of 'U': entry (a, b) counts
 // the users who rated both items a and b.
 func coRating(U *share.Matrix[uint64]) []float64 {
