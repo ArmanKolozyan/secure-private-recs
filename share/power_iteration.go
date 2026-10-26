@@ -206,6 +206,12 @@ func PowerIteration(U0, U1, U2 *Matrix[Share128], params *PowerItParams, pool *P
 			MatrixTruncateRSSInPlace(v0, v1, v2, uint(params.N_decimals), pool, perf)
 			trunc_saved = 0
 
+			// handing the vector that is about to be normalized to an experiment,
+			// if one is attached (see LastIterationHook)
+			if LastIterationHook != nil && component == 0 && iter == params.N_iters-1 {
+				LastIterationHook(v0, v1, v2)
+			}
+
 			// Normalize the vector
 			VectorNormalizeRSSInPlace(v0, v1, v2, uint(params.N_decimals), uint(params.Norm_decimals), uint(params.Newton_iters), pool, perf)
 
