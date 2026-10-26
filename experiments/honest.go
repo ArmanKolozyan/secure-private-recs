@@ -11,10 +11,10 @@ import (
 // HonestRun runs Nudge's power iteration honestly on the ratings matrix 'U', in
 // one process that plays all three servers. Only the first component is
 // computed, since the attack concerns only the first revealed row. It returns
-// that row as signed fixed-point integers, and h, the vector that entered
-// normalization in the last iteration, in real units. Nudge does not reveal h,
-// so it is read with the share.LastIterationHook hook.
-func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) ([]int64, []float64) {
+// h, the vector that entered normalization in the last iteration, in real
+// units. Nudge does not reveal h, so it is read with the share.LastIterationHook
+// hook.
+func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 	// computing only the first component, without changing the caller's parameters
 	q := *p
 	q.K = 1
@@ -39,7 +39,7 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) ([]int64, []flo
 	U0, U1, U2 := share.ShareMatrixRSS(U, pool)
 
 	// running the power iteration, with the matrix scaled to fixed point as the
-	// protocol prescribes (the last argument)
-	B, _, _ := share.PowerIteration(U0, U1, U2, &q, pool, true)
-	return RowAsSigned(B, 0), h
+	// protocol prescribes (the last argument), during which the hook fills 'h'
+	share.PowerIteration(U0, U1, U2, &q, pool, true)
+	return h
 }
