@@ -18,7 +18,6 @@ type Victim struct {
 // each entry 1 with probability 'Density', and then the rows of the 'Victims'
 // overwritten as described in Victim. The generator is deterministic in 'Seed'.
 type SynthSpec struct {
-	Name    string
 	M, N    uint64
 	Density float64
 	Seed    int64
@@ -29,7 +28,7 @@ type SynthSpec struct {
 // matrix on which a protocol run takes a fraction of a second. User 3 is the
 // victim and has 9 ratings.
 var Matrices = map[string]SynthSpec{
-	"80x24": {Name: "80x24", M: 80, N: 24, Density: 0.2, Seed: 42, Victims: []Victim{{Row: 3, Rated: 9}}},
+	"80x24": {M: 80, N: 24, Density: 0.2, Seed: 42, Victims: []Victim{{Row: 3, Rated: 9}}},
 }
 
 // This function builds the matrix described by the given 'spec'.
