@@ -164,9 +164,9 @@ func PowerIteration(U0, U1, U2 *Matrix[Share128], params *PowerItParams, pool *P
 				}
 
 				// handing the additive shares of the product U * v to an experiment right
-				// before they are reshared, if one is attached (see LastReshareHook)
-				if LastReshareHook != nil && component == 0 && iter == params.N_iters-1 {
-					LastReshareHook(u0_add, u1_add, u2_add)
+				// before they are reshared, if one is attached (see AttackHook)
+				if AttackHook != nil && component == 0 && iter == params.N_iters-1 {
+					AttackHook(u0_add, u1_add, u2_add)
 				}
 
 				// Re-sharing: turn additive shares of [u] into RSS ones
@@ -213,9 +213,9 @@ func PowerIteration(U0, U1, U2 *Matrix[Share128], params *PowerItParams, pool *P
 			trunc_saved = 0
 
 			// handing the vector that is about to be normalized to an experiment,
-			// if one is attached (see LastIterationHook)
-			if LastIterationHook != nil && component == 0 && iter == params.N_iters-1 {
-				LastIterationHook(v0, v1, v2)
+			// if one is attached (see HonestValuesHook)
+			if HonestValuesHook != nil && component == 0 && iter == params.N_iters-1 {
+				HonestValuesHook(v0, v1, v2)
 			}
 
 			// Normalize the vector

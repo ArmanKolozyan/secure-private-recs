@@ -13,15 +13,15 @@ import (
 // one process that plays all three servers. Only the first component is
 // computed, since the attack concerns only the first revealed row. It returns
 // h, the vector that entered normalization in the last iteration, in real
-// units. Nudge does not reveal h, so it is read with the share.LastIterationHook
+// units. Nudge does not reveal h, so it is read with the share.HonestValuesHook
 // hook.
 func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 	// attaching the hook that reads h, and detaching it when the run is over
 	var h []float64
-	share.LastIterationHook = func(v0, v1, v2 *share.Matrix[share.Share128]) {
+	share.HonestValuesHook = func(h0, h1, h2 *share.Matrix[share.Share128]) {
 		// putting h back together from the three servers' shares, with a separate
 		// performance log so that this does not count as communication of the run
-		z := share.MatrixRecoverFromRSS(v0, v1, v2, new(share.PerfLog))
+		z := share.MatrixRecoverFromRSS(h0, h1, h2, new(share.PerfLog))
 		h = make([]float64, z.NRows())
 		for j := range h {
 			// converting from Nudge's fixed point (signed integers times
@@ -29,7 +29,7 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 			h[j] = float64(int64(*z.Get(uint64(j), 0))) / math.Ldexp(1, p.N_decimals)
 		}
 	}
-	defer func() { share.LastIterationHook = nil }()
+	defer func() { share.HonestValuesHook = nil }()
 
 	// running Nudge, during which the hook fills 'h'
 	runNudge(U, p)
@@ -41,7 +41,7 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 // iteration of the first component, that server adds Λ = 2^'exponent' to its
 // share of the matrix-vector product U * v of the ratings matrix and the
 // current vector, at the entry of the victim 'victim' (the product has one
-// entry per user), right before the reshare (see share.LastReshareHook).
+// entry per user), right before the reshare (see share.AttackHook).
 // A negative 'exponent' means no injection, which is an honest run.
 // Only the first component is computed. It returns the first revealed row as
 // signed fixed-point integers.
@@ -56,7 +56,7 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 		// attaching the hook, which Nudge calls with the three servers' additive
 		// shares of the product U * v (one entry per user), right before the
 		// servers reshare it in the last iteration of the first component
-		share.LastReshareHook = func(u0, u1, u2 *share.Matrix[uint128.Uint128]) {
+		share.AttackHook = func(u0, u1, u2 *share.Matrix[uint128.Uint128]) {
 			// Adding Λ, modulo 2^128, to the victim's entry of server 1's share.
 			// Any server's share would do, since the reshare is linear in each
 			// of them.
@@ -64,7 +64,7 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 		}
 
 		// detaching the hook when the run is over, so that later runs are honest
-		defer func() { share.LastReshareHook = nil }()
+		defer func() { share.AttackHook = nil }()
 	}
 
 	// running Nudge and returning the first row the servers reveal
