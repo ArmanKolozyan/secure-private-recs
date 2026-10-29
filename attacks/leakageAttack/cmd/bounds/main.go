@@ -34,27 +34,27 @@ func main() {
 	U := leakageattack.Synthetic(spec)
 
 	// computing the largest eigenvalue and running Nudge honestly to get h
-	a := leakageattack.ExactValues(*name, U)
+	stats := leakageattack.NewMatrixStats(*name, U)
 	h := leakageattack.HonestRun(U, p)
 
-	fmt.Printf("matrix %s: %d users x %d items, S = %d ratings\n", a.Name, a.Users, a.Items, a.S)
+	fmt.Printf("matrix %s: %d users x %d items, S = %d ratings\n", stats.Name, stats.Users, stats.Items, stats.S)
 	fmt.Printf("  lambda1 = %.3f, |q1|_inf = %.4f, lambda1*|q1|_inf = %.3f\n",
-		a.Lambda1, a.Q1Inf, a.Lambda1*a.Q1Inf)
+		stats.Lambda1, stats.Q1Inf, stats.Lambda1*stats.Q1Inf)
 
 	// computing and printing the bounds for each victim
 	var victims []leakageattack.VictimBounds
 	for _, v := range spec.Victims {
-		b := a.Bounds(U, v.Row, h, p)
-		victims = append(victims, b)
-		fmt.Printf("victim user %d rated %d items: %v\n", b.Row, len(b.RatedItems), b.RatedItems)
-		fmt.Printf("  H_on = %.3f, H_off = %.3f, h_on = %.3f\n", b.HOn, b.HOff, b.HOnMin)
+		bounds := leakageattack.Bounds(U, v.Row, h, p)
+		victims = append(victims, bounds)
+		fmt.Printf("victim user %d rated %d items: %v\n", bounds.Row, len(bounds.RatedItems), bounds.RatedItems)
+		fmt.Printf("  H_on = %.3f, H_off = %.3f, h_on = %.3f\n", bounds.HOn, bounds.HOff, bounds.HOnMin)
 		fmt.Printf("  lowest injection (log2 Lambda): case 1 %.2f, case 2 %.2f, attacker's %.2f; highest %.2f\n",
-			b.LowestCase1, b.LowestCase2, b.LowestAttacker, b.Highest)
+			bounds.LowestCase1, bounds.LowestCase2, bounds.LowestAttacker, bounds.Highest)
 	}
 
 	// writing the same values as a CSV table when a file was given
 	if *out != "" {
-		if err := leakageattack.WriteBoundsCSV(*out, a, victims); err != nil {
+		if err := leakageattack.WriteBoundsCSV(*out, stats, victims); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

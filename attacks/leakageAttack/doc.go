@@ -10,14 +10,12 @@
 //     three servers, either honest, reading the honest values h, or with the
 //     injection
 //   - bounds.go: the bounds on Λ predicted from h, and the attacker's choice
-//   - eigen.go: the largest eigenvalue and eigenvector of the co-rating
-//     matrix, which the 'bounds' program reports next to the bounds to compare
-//     the honest values with their estimate from these two (to confirm that
-//     the honest values are about the eigenvalue times the eigenvector's
-//     coordinates, which the bound 2 * eigenvalue * largest coordinate
-//     assumes), and the eigenvalue with the total number of ratings the
-//     attacker uses instead (to show how much larger an injection the attacker
-//     needs for not knowing the matrix)
+//   - eigen.go: summary values of a matrix (MatrixStats), among them the
+//     largest eigenvalue and eigenvector of the co-rating matrix. 
+// 		 The 'bounds' program prints them to check (1) that the honest values 
+//     are about the eigenvalue times the eigenvector's coordinates, and (2) 
+//     by how much the total number of ratings, which the attacker uses in place 
+//     of the eigenvalue, exceeds it
 //   - guess.go: the attacker's guess for the victim's items from a revealed row
 //   - verdict.go: the experiment's verdict on that guess
 //   - results.go: the result of each attack run, as one CSV line
