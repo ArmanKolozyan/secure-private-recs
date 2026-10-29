@@ -10,7 +10,8 @@
 // It writes one line per run to a CSV file. It then prints the predicted
 // lowest and highest Λ (see VictimBounds) and, below them, the exponents
 // at which the runs actually leaked, so one can check that the attack starts
-// and stops where predicted. It also shows in how many runs the attack revealed
+// and stops where predicted. Where only some runs leaked, it also says how
+// many of the others had negative honest values (see AttackRun). It also shows in how many runs the attack revealed
 // the victim's items when the attacker used its own choice of Λ, the one it
 // computes from the total number of ratings and the victim's number of ratings
 // (see AttackerExponent).
@@ -96,9 +97,10 @@ func main() {
 				leaks := 0
 				for r := 0; r < *repeats; r++ {
 					// running one attack with Λ = 2^e and this start vector, in a
-					// copy of this program, and recording its verdict
-					verdict := runOne(self, *name, *paramsPath, v.Row, e, start)
-					victimResults = append(victimResults, leakageattack.Result{Matrix: *name, Victim: v.Row, Exponent: e, Start: start, Verdict: verdict})
+					// copy of this program, and recording its verdict and the sign of its
+					// honest values
+					verdict, sign := runOne(self, *name, *paramsPath, v.Row, e, start)
+					victimResults = append(victimResults, leakageattack.Result{Matrix: *name, Victim: v.Row, Exponent: e, Start: start, Verdict: verdict, HonestSign: sign})
 
 					// counting the runs that revealed the victim's items
 					if verdict == leakageattack.Leak {
@@ -151,15 +153,16 @@ func runChild(name, paramsPath, victim, exponent, start string) {
 	p := params.FromJSON(paramsPath)
 	p.Start_random = start == "random"
 
-	// running the attack and printing the verdict
-	revealed := leakageattack.AttackRun(U, p, row, e)
-	fmt.Printf("VERDICT %s\n", leakageattack.AttackVerdict(revealed, leakageattack.ItemsRatedBy(U, row)))
+	// running the attack and printing the verdict and the sign of the honest values
+	revealed, sign := leakageattack.AttackRun(U, p, row, e)
+	fmt.Printf("RESULT %s %s\n", leakageattack.AttackVerdict(revealed, leakageattack.ItemsRatedBy(U, row)), sign)
 }
 
 // runOne starts a copy of this program for one attack run and returns its
-// verdict. A copy that dies counts as OVERFLOW when Nudge stopped because a
-// value to be revealed did not fit in 64 bits, and as CRASH otherwise.
-func runOne(self, name, paramsPath string, victim uint64, exponent int, start string) leakageattack.Verdict {
+// verdict and the sign of its honest values. A copy that dies counts as
+// OVERFLOW when Nudge stopped because a value to be revealed did not fit in 64
+// bits, and as CRASH otherwise, both with an empty sign.
+func runOne(self, name, paramsPath string, victim uint64, exponent int, start string) (leakageattack.Verdict, string) {
 	cmd := exec.Command(self, "child", name, paramsPath, fmt.Sprint(victim), fmt.Sprint(exponent), start)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
@@ -167,18 +170,20 @@ func runOne(self, name, paramsPath string, victim uint64, exponent int, start st
 	// classifying a copy that died by Nudge's error message
 	if err := cmd.Run(); err != nil {
 		if strings.Contains(stderr.String(), "does not fit in 64 bits") {
-			return leakageattack.Overflow
+			return leakageattack.Overflow, ""
 		}
-		return leakageattack.Crash
+		return leakageattack.Crash, ""
 	}
 
-	// finding the verdict line among Nudge's progress output
+	// finding the result line among Nudge's progress output
 	for _, line := range strings.Split(stdout.String(), "\n") {
-		if v, found := strings.CutPrefix(line, "VERDICT "); found {
-			return leakageattack.Verdict(v)
+		if rest, found := strings.CutPrefix(line, "RESULT "); found {
+			if fields := strings.Fields(rest); len(fields) == 2 {
+				return leakageattack.Verdict(fields[0]), fields[1]
+			}
 		}
 	}
-	return leakageattack.Crash
+	return leakageattack.Crash, ""
 }
 
 // printTable prints, for one victim, the predicted bounds, the attacker's
@@ -230,6 +235,25 @@ func printTable(name string, ratings uint64, bounds leakageattack.VictimBounds, 
 		fmt.Printf("  some run leaked:    %s\n", ranges(someLeak))
 		fmt.Printf("  some row all zeros: %s\n", ranges(someZero))
 		fmt.Printf("  some run stopped:   %s\n", ranges(someStop))
+
+		// checking, at the exponents where only some runs leaked, that the runs
+		// that did not leak are the ones with negative honest values
+		notLeaked, negative := 0, 0
+		for _, r := range results {
+			c := count[r.Exponent]
+			if r.Start != start || c[leakageattack.Leak] == 0 || c[leakageattack.Leak] == total[r.Exponent] {
+				continue
+			}
+			if r.Verdict != leakageattack.Leak {
+				notLeaked++
+				if r.HonestSign == "negative" {
+					negative++
+				}
+			}
+		}
+		if notLeaked > 0 {
+			fmt.Printf("  where only some runs leaked, %d of the %d runs that did not leak had negative honest values\n", negative, notLeaked)
+		}
 		if total[choice] > 0 {
 			fmt.Printf("  at the attacker's choice 2^%d: %d of %d runs leaked\n", choice, count[choice][leakageattack.Leak], total[choice])
 		}

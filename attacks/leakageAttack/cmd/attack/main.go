@@ -10,7 +10,7 @@
 //
 // For each victim of the matrix, the program prints the revealed row, the
 // attacker's guess for the victim's items, the items the victim actually
-// rated, and the verdict. Λ is chosen as a power of two: -exponent 50 means
+// rated, the sign of the honest values (see AttackRun), and the verdict. Λ is chosen as a power of two: -exponent 50 means
 // Λ = 2^50. Without -exponent nothing is added, which gives the baseline: an
 // honest run, whose revealed row should not expose the victim's items.
 //
@@ -68,18 +68,20 @@ func main() {
 	for _, v := range spec.Victims {
 		// running Nudge with the injection aimed at this victim, and taking the
 		// first model row the servers reveal
-		row := leakageattack.AttackRun(U, p, v.Row, *exponent)
+		row, sign := leakageattack.AttackRun(U, p, v.Row, *exponent)
 
 		// reading the items the victim actually rated, which only the experiment
 		// knows, to judge the attacker's guess
 		items := leakageattack.ItemsRatedBy(U, v.Row)
 
 		// printing the revealed row, the attacker's guess for the victim's items,
-		// the items the victim actually rated, and the verdict
+		// the items the victim actually rated, the sign of the honest values, and
+		// the verdict
 		fmt.Printf("matrix %s, %s start, %s, victim user %d\n", *name, start, injection, v.Row)
 		fmt.Printf("  revealed row:     %v\n", row)
 		fmt.Printf("  attacker's guess: %v\n", leakageattack.AttackerGuess(row, len(items)))
 		fmt.Printf("  items rated:      %v\n", items)
+		fmt.Printf("  honest values:    %s\n", sign)
 		fmt.Printf("  verdict:          %s\n", leakageattack.AttackVerdict(row, items))
 	}
 }

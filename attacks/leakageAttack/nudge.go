@@ -44,8 +44,11 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 // entry per user), right before the reshare (see share.AttackHook).
 // A negative 'exponent' means no injection, which is an honest run.
 // Only the first component is computed. It returns the first revealed row as
-// signed fixed-point integers.
-func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int) []int64 {
+// signed fixed-point integers, and the sign of the honest values in the last
+// iteration, read on the items the victim did not rate, whose values the
+// injection does not change: "positive" when they are all at least 0,
+// "negative" when they are all at most 0, and "mixed" otherwise.
+func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int) ([]int64, string) {
 	// injecting only when an exponent is given, a negative one means an honest run
 	if exponent >= 0 {
 		// building Λ = 2^exponent as a 128-bit integer: the number 1 (high half
@@ -67,8 +70,44 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 		defer func() { share.AttackHook = nil }()
 	}
 
-	// running Nudge and returning the first row the servers reveal
-	return runNudge(U, p)
+	// reading, in the last iteration, the signs of the honest values on the
+	// items the victim did not rate, whose values the injection leaves unchanged
+	rated := make([]bool, U.NCols())
+	for _, j := range ItemsRatedBy(U, victim) {
+		rated[j] = true
+	}
+	sign := ""
+	share.HonestValuesHook = func(h0, h1, h2 *share.Matrix[share.Share128]) {
+		positive, negative := false, false
+		for j := uint64(0); j < h0.NRows(); j++ {
+			if rated[j] {
+				continue
+			}
+			// Putting the value back together from the servers' shares, in 128
+			// bits.
+			x := uint128.Add(&h0.Data[j].First, &h0.Data[j].Second)
+			x.AddInPlace(&h1.Data[j].First)
+			switch {
+			case uint128.IsZero(x):
+			case uint128.CheckPositiveUint64(x):
+				positive = true
+			default:
+				negative = true
+			}
+		}
+		switch {
+		case positive && negative:
+			sign = "mixed"
+		case negative:
+			sign = "negative"
+		default:
+			sign = "positive"
+		}
+	}
+	defer func() { share.HonestValuesHook = nil }()
+
+	// running Nudge and returning the first row the servers reveal, with the sign
+	return runNudge(U, p), sign
 }
 
 // runNudge splits the ratings matrix 'U' into secret shares for the three
