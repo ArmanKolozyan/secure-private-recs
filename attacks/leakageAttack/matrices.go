@@ -1,6 +1,7 @@
 package leakageattack
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/NudgeArtifact/private-recs/share"
@@ -52,6 +53,33 @@ func Synthetic(spec SynthSpec) *share.Matrix[uint64] {
 		}
 	}
 	return U
+}
+
+// Load returns the ratings matrix named 'name' and the rows of its victims.
+// The names are those of Matrices, which are generated, and "ml100k" and
+// "ml100k-40", which are MovieLens 100K with all movies or with its 40
+// most-rated movies, read from MovieLensFile (see MovieLens), with the victims
+// listed in MovieLensVictims.
+func Load(name string) (*share.Matrix[uint64], []uint64, error) {
+	// a synthetic matrix, with its victims as listed
+	if spec, ok := Matrices[name]; ok {
+		var victims []uint64
+		for _, v := range spec.Victims {
+			victims = append(victims, v.Row)
+		}
+		return Synthetic(spec), victims, nil
+	}
+
+	// MovieLens 100K, with all movies or with the 40 most-rated ones
+	movies, ok := map[string]int{"ml100k": 0, "ml100k-40": 40}[name]
+	if !ok {
+		return nil, nil, fmt.Errorf("unknown matrix %q", name)
+	}
+	U, err := MovieLens(MovieLensFile, movies)
+	if err != nil {
+		return nil, nil, err
+	}
+	return U, MovieLensVictims[name], nil
 }
 
 // ItemsRatedBy returns the column indices of the items user 'i' rated.

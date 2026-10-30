@@ -19,19 +19,18 @@ import (
 )
 
 func main() {
-	name := flag.String("matrix", "80x24", "name of a synthetic matrix, as listed in Matrices")
+	name := flag.String("matrix", "80x24", "name of a matrix: one listed in Matrices, ml100k or ml100k-40 (see Load)")
 	paramsPath := flag.String("params", "params/cheap_params.json", "power-iteration parameters")
 	out := flag.String("csv", "", "if set, write the table to this CSV file")
 	flag.Parse()
 
-	// looking up the matrix by name and building it
-	spec, ok := leakageattack.Matrices[*name]
-	if !ok {
-		fmt.Fprintf(os.Stderr, "unknown matrix %q\n", *name)
+	// loading the matrix and its victims by name, and the parameters
+	U, victims, err := leakageattack.Load(*name)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
 	p := params.FromJSON(*paramsPath)
-	U := leakageattack.Synthetic(spec)
 
 	// computing the largest eigenvalue and running Nudge honestly to get h
 	stats := leakageattack.NewMatrixStats(*name, U)
@@ -42,11 +41,11 @@ func main() {
 		stats.Lambda1, stats.Q1Inf, stats.Lambda1*stats.Q1Inf)
 
 	// computing and printing the bounds for each victim
-	var victims []leakageattack.VictimBounds
-	for _, v := range spec.Victims {
-		bounds := leakageattack.Bounds(U, v.Row, h, p)
-		victims = append(victims, bounds)
-		fmt.Printf("victim user %d rated %d items: %v\n", bounds.Row, len(bounds.RatedItems), bounds.RatedItems)
+	var allBounds []leakageattack.VictimBounds
+	for _, victim := range victims {
+		bounds := leakageattack.Bounds(U, victim, h, p)
+		allBounds = append(allBounds, bounds)
+		fmt.Printf("victim user %d rated %d items\n", bounds.Row, len(bounds.RatedItems))
 		fmt.Printf("  H_on = %.3f, H_off = %.3f, h_on = %.3f\n", bounds.HOn, bounds.HOff, bounds.HOnMin)
 		fmt.Printf("  lowest injection (log2 Lambda): case 1 %.2f, case 2 %.2f, attacker's %.2f; highest %.2f\n",
 			bounds.LowestCase1, bounds.LowestCase2, bounds.LowestAttacker, bounds.Highest)
@@ -54,7 +53,7 @@ func main() {
 
 	// writing the same values as a CSV table when a file was given
 	if *out != "" {
-		if err := leakageattack.WriteBoundsCSV(*out, stats, victims); err != nil {
+		if err := leakageattack.WriteBoundsCSV(*out, stats, allBounds); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

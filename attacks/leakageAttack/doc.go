@@ -5,7 +5,10 @@
 // servers reveal exposes which items that user rated.
 //
 // The files, from the inputs to the outcome:
-//   - matrices.go: synthetic ratings matrices with a victim
+//   - matrices.go: synthetic ratings matrices with a victim, and Load, which
+//     returns any matrix by name together with its victims
+//   - movielens.go: MovieLens 100K as a 0/1 ratings matrix, in full or with
+//     its 40 most-rated movies, and the victims chosen in it
 //   - nudge.go: runs of Nudge's power iteration in one process that plays all
 //     three servers, either honest, reading the honest values h, or with the
 //     injection

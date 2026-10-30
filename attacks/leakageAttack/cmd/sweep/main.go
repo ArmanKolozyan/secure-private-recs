@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// reading the command-line flags
-	name := flag.String("matrix", "80x24", "name of a synthetic matrix, as listed in Matrices")
+	name := flag.String("matrix", "80x24", "name of a matrix: one listed in Matrices, ml100k or ml100k-40 (see Load)")
 	paramsPath := flag.String("params", "params/cheap_params.json", "power-iteration parameters")
 	from := flag.Int("from", 30, "smallest exponent e of Λ = 2^e")
 	to := flag.Int("to", 90, "largest exponent e of Λ = 2^e")
@@ -59,15 +59,12 @@ func main() {
 		os.Exit(2)
 	}
 
-	// looking up the matrix by name
-	spec, ok := leakageattack.Matrices[*name]
-	if !ok {
-		fmt.Fprintf(os.Stderr, "unknown matrix %q\n", *name)
+	// loading the matrix and its victims by name, and the parameters
+	U, victims, err := leakageattack.Load(*name)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-
-	// building the matrix and loading the parameters
-	U := leakageattack.Synthetic(spec)
 	p := params.FromJSON(*paramsPath)
 
 	// running Nudge once without attack to read the honest values h, needed for
@@ -84,9 +81,9 @@ func main() {
 
 	// collecting the results of all victims, written to the CSV file at the end
 	var results []leakageattack.Result
-	for _, v := range spec.Victims {
+	for _, victim := range victims {
 		// computing the predicted bounds on Λ for this victim
-		bounds := leakageattack.Bounds(U, v.Row, h, p)
+		bounds := leakageattack.Bounds(U, victim, h, p)
 
 		// collecting this victim's results, one per attack run
 		var victimResults []leakageattack.Result
@@ -99,8 +96,8 @@ func main() {
 					// running one attack with Λ = 2^e and this start vector, in a
 					// copy of this program, and recording its verdict and the sign of its
 					// honest values
-					verdict, sign := runOne(self, *name, *paramsPath, v.Row, e, start)
-					victimResults = append(victimResults, leakageattack.Result{Matrix: *name, Victim: v.Row, Exponent: e, Start: start, Verdict: verdict, HonestSign: sign})
+					verdict, sign := runOne(self, *name, *paramsPath, victim, e, start)
+					victimResults = append(victimResults, leakageattack.Result{Matrix: *name, Victim: victim, Exponent: e, Start: start, Verdict: verdict, HonestSign: sign})
 
 					// counting the runs that revealed the victim's items
 					if verdict == leakageattack.Leak {
@@ -148,8 +145,12 @@ func runChild(name, paramsPath, victim, exponent, start string) {
 		os.Exit(2)
 	}
 
-	// building the same matrix as the sweep and setting the start vector
-	U := leakageattack.Synthetic(leakageattack.Matrices[name])
+	// loading the same matrix as the sweep and setting the start vector
+	U, _, err := leakageattack.Load(name)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
 	p := params.FromJSON(paramsPath)
 	p.Start_random = start == "random"
 
