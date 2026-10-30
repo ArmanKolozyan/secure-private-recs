@@ -1,0 +1,432 @@
+Starting secret-shared power iteration: 1 components, 10 iters, 20 decimal bits of precision
+Multiplied by constants in place
+  building factor 0 of 1
+Iter 0
+    took 24.910541ms
+Iter 1
+    took 17.373ms
+Iter 2
+    took 16.808375ms
+Iter 3
+    took 17.268ms
+Iter 4
+    took 16.503083ms
+Iter 5
+    took 16.368875ms
+Iter 6
+    took 16.451625ms
+Iter 7
+    took 17.977709ms
+Iter 8
+    took 16.641333ms
+Iter 9
+    took 17.080959ms
+Recovered component 0
+Returing from power iteration...
+2^30:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^31:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^32:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^33:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^34:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^35:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^36:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^37:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^38:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^39:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^40:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^41:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^42:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^43:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^44:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^45:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^46:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^47:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^48:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^49:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^50:  ones start 0 of 5 leaked  random start 5 of 5 leaked
+2^51:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^52:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^53:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^54:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^55:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^56:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^57:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^58:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^59:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^60:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^61:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^62:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^63:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^64:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^65:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^66:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^67:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^68:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^69:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^70:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^71:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^72:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^73:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^74:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^75:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^76:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^77:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^78:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^79:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^80:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^81:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^82:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^83:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^84:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^85:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^86:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^87:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^88:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^89:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^90:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+
+victim user 819 of ml100k-40, who rated 1 items, S = 14978 ratings
+predicted, in bits: case 1 NaN, case 2 51.77, attacker's lowest 54.87, highest 80.00
+attacker's choice: 2^67
+
+ones start, exponents e of Λ = 2^e
+  every run leaked:   52-79
+  some run leaked:    52-79
+  some row all zeros: 80-90
+  some run stopped:   none
+  at the attacker's choice 2^67: 5 of 5 runs leaked
+
+random start, exponents e of Λ = 2^e
+  every run leaked:   50, 52-79
+  some run leaked:    49-79, 84-90
+  some row all zeros: 80-90
+  some run stopped:   none
+  where only some runs leaked, 18 of the 18 runs that did not leak had negative honest values
+  at the attacker's choice 2^67: 5 of 5 runs leaked
+
+2^30:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^31:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^32:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^33:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^34:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^35:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^36:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^37:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^38:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^39:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^40:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^41:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^42:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^43:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^44:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^45:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^46:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^47:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^48:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^49:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^50:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^51:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^52:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^53:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^54:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^55:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^56:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^57:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^58:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^59:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^60:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^61:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^62:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^63:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^64:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^65:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^66:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^67:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^68:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^69:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^70:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^71:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^72:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^73:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^74:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^75:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^76:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^77:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^78:  ones start 5 of 5 leaked  random start 2 of 5 leaked
+2^79:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^80:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^81:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^82:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^83:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^84:  ones start 0 of 5 leaked  random start 5 of 5 leaked
+2^85:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^86:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^87:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^88:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^89:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^90:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+
+victim user 609 of ml100k-40, who rated 8 items, S = 14978 ratings
+predicted, in bits: case 1 NaN, case 2 51.81, attacker's lowest 54.87, highest 78.50
+attacker's choice: 2^67
+
+ones start, exponents e of Λ = 2^e
+  every run leaked:   52-78
+  some run leaked:    52-78
+  some row all zeros: 79-90
+  some run stopped:   none
+  at the attacker's choice 2^67: 5 of 5 runs leaked
+
+random start, exponents e of Λ = 2^e
+  every run leaked:   52-77, 84
+  some run leaked:    50-78, 83-90
+  some row all zeros: 78-83, 85-90
+  some run stopped:   none
+  where only some runs leaked, 15 of the 18 runs that did not leak had negative honest values
+  at the attacker's choice 2^67: 5 of 5 runs leaked
+
+2^30:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^31:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^32:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^33:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^34:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^35:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^36:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^37:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^38:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^39:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^40:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^41:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^42:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^43:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^44:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^45:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^46:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^47:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^48:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^49:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^50:  ones start 0 of 5 leaked  random start 1 of 5 leaked
+2^51:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^52:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^53:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^54:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^55:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^56:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^57:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^58:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^59:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^60:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^61:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^62:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^63:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^64:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^65:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^66:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^67:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^68:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^69:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^70:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^71:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^72:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^73:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^74:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^75:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^76:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^77:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^78:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^79:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^80:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^81:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^82:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^83:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^84:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^85:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^86:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^87:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^88:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^89:  ones start 0 of 5 leaked  random start 1 of 5 leaked
+2^90:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+
+victim user 671 of ml100k-40, who rated 14 items, S = 14978 ratings
+predicted, in bits: case 1 NaN, case 2 51.81, attacker's lowest 54.87, highest 78.10
+attacker's choice: 2^66
+
+ones start, exponents e of Λ = 2^e
+  every run leaked:   52-77
+  some run leaked:    52-77
+  some row all zeros: 78-90
+  some run stopped:   none
+  at the attacker's choice 2^66: 5 of 5 runs leaked
+
+random start, exponents e of Λ = 2^e
+  every run leaked:   52-77
+  some run leaked:    50-77, 84-90
+  some row all zeros: 78-90
+  some run stopped:   none
+  where only some runs leaked, 22 of the 22 runs that did not leak had negative honest values
+  at the attacker's choice 2^66: 5 of 5 runs leaked
+
+2^30:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^31:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^32:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^33:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^34:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^35:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^36:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^37:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^38:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^39:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^40:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^41:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^42:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^43:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^44:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^45:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^46:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^47:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^48:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^49:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^50:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^51:  ones start 0 of 5 leaked  random start 1 of 5 leaked
+2^52:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^53:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^54:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^55:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^56:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^57:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^58:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^59:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^60:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^61:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^62:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^63:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^64:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^65:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^66:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^67:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^68:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^69:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^70:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^71:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^72:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^73:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^74:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^75:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^76:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^77:  ones start 4 of 5 leaked  random start 5 of 5 leaked
+2^78:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^79:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^80:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^81:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^82:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^83:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^84:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^85:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^86:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^87:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^88:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^89:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^90:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+
+victim user 157 of ml100k-40, who rated 23 items, S = 14978 ratings
+predicted, in bits: case 1 NaN, case 2 51.72, attacker's lowest 54.87, highest 77.74
+attacker's choice: 2^66
+
+ones start, exponents e of Λ = 2^e
+  every run leaked:   52-76
+  some run leaked:    52-77
+  some row all zeros: 77-90
+  some run stopped:   none
+  where only some runs leaked, 1 of the 1 runs that did not leak had negative honest values
+  at the attacker's choice 2^66: 5 of 5 runs leaked
+
+random start, exponents e of Λ = 2^e
+  every run leaked:   52-77
+  some run leaked:    50-77, 84-90
+  some row all zeros: 78-90
+  some run stopped:   none
+  where only some runs leaked, 19 of the 19 runs that did not leak had negative honest values
+  at the attacker's choice 2^66: 5 of 5 runs leaked
+
+2^30:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^31:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^32:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^33:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^34:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^35:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^36:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^37:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^38:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^39:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^40:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^41:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^42:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^43:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^44:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^45:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^46:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^47:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^48:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^49:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^50:  ones start 0 of 5 leaked  random start 2 of 5 leaked
+2^51:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^52:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^53:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^54:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^55:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^56:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^57:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^58:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^59:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^60:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^61:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^62:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^63:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^64:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^65:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^66:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^67:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^68:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^69:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^70:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^71:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^72:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^73:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^74:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^75:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^76:  ones start 5 of 5 leaked  random start 5 of 5 leaked
+2^77:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^78:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^79:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^80:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^81:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^82:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^83:  ones start 0 of 5 leaked  random start 0 of 5 leaked
+2^84:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^85:  ones start 0 of 5 leaked  random start 1 of 5 leaked
+2^86:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^87:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^88:  ones start 0 of 5 leaked  random start 4 of 5 leaked
+2^89:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+2^90:  ones start 0 of 5 leaked  random start 3 of 5 leaked
+
+victim user 414 of ml100k-40, who rated 39 items, S = 14978 ratings
+predicted, in bits: case 1 NaN, case 2 51.66, attacker's lowest 54.87, highest 77.36
+attacker's choice: 2^66
+
+ones start, exponents e of Λ = 2^e
+  every run leaked:   52-76
+  some run leaked:    52-76
+  some row all zeros: 77-90
+  some run stopped:   none
+  at the attacker's choice 2^66: 5 of 5 runs leaked
+
+random start, exponents e of Λ = 2^e
+  every run leaked:   52-76
+  some run leaked:    50-76, 84-90
+  some row all zeros: 77-90
+  some run stopped:   none
+  where only some runs leaked, 18 of the 18 runs that did not leak had negative honest values
+  at the attacker's choice 2^66: 5 of 5 runs leaked
+
+wrote results/raw/sweep-ml100k-40.csv
