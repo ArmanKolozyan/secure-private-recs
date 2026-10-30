@@ -50,7 +50,7 @@ func main() {
 	from := flag.Int("from", 30, "smallest exponent e of Λ = 2^e")
 	to := flag.Int("to", 90, "largest exponent e of Λ = 2^e")
 	repeats := flag.Int("repeats", 5, "runs per exponent and start vector")
-	out := flag.String("csv", "", "CSV file for the runs (default results/raw/sweep-<matrix>.csv)")
+	out := flag.String("csv", "", "CSV file for the runs (default attacks/leakageAttack/results/sweep-<matrix>.csv)")
 	flag.Parse()
 
 	// rejecting exponents for which Λ = 2^e does not fit in Nudge's 128-bit integers
@@ -121,7 +121,7 @@ func main() {
 	// writing one line per run to the CSV file
 	path := *out
 	if path == "" {
-		path = filepath.Join("results", "raw", "sweep-"+*name+".csv")
+		path = filepath.Join("attacks", "leakageAttack", "results", "sweep-"+*name+".csv")
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		fmt.Fprintln(os.Stderr, err)
