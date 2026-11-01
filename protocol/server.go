@@ -664,7 +664,9 @@ func (s *Server) MatrixAdditiveToRSSDst(m *Matrix[Uint128], out *Matrix[Share128
 func (s *Server) estimateInvSqrt(eval []Uint128, decimals, norm_decimals uint, dst *Uint128) {
 	for i := 0; i < 128; i++ {
 		index := 127 - i - int(decimals)
-		index /= 2 // NOTE: This is a floor instead of a ceil
+		// index /= 2 // NOTE: This is a floor instead of a ceil
+		// TODO: check w/ Alexandra
+		index = (index + 1) / 2
 		if int(norm_decimals) >= index {
 			coeff := MakeUint128(0, 1)
 			coeff.LshInPlace(uint(int(norm_decimals) - index))

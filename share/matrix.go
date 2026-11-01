@@ -1535,7 +1535,9 @@ func VectorNormalizeRSSInPlace(v0, v1, v2 *Matrix[Share128], decimals, norm_deci
 		coeff := MakeUint128(0, 0)
 
 		index := 127 - i - int(decimals)
-		index /= 2 // NOTE: This is a floor instead of a ceil
+		// index /= 2 // NOTE: This is a floor instead of a ceil
+		// TODO: check w/ Alexandra
+		index = (index + 1) / 2
 		if int(norm_decimals) >= index {
 			coeff = MakeUint128(0, 1)
 			coeff.LshInPlace(uint(int(norm_decimals) - index))
