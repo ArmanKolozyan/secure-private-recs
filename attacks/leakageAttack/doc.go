@@ -22,6 +22,9 @@
 //   - guess.go: the attacker's guess for the victim's items from a revealed row
 //   - verdict.go: the experiment's verdict on that guess
 //   - results.go: the result of each attack run, as one CSV line
+//   - recs.go: the recommendations Nudge serves from a revealed model, and
+//     how the lists of two models differ, to see whether the attack shows in
+//     what the users get
 //
 // The command-line programs live in attacks/leakageAttack/cmd.
 package leakageattack
