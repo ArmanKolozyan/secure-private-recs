@@ -31,8 +31,10 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 	}
 	defer func() { share.HonestValuesHook = nil }()
 
-	// running Nudge, during which the hook fills 'h'
-	runNudge(U, p)
+	// running Nudge for the first component only, during which the hook fills 'h'
+	q := *p
+	q.K = 1
+	runNudge(U, &q)
 	return h
 }
 
@@ -49,26 +51,8 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 // injection does not change: "positive" when they are all at least 0,
 // "negative" when they are all at most 0, and "mixed" otherwise.
 func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int) ([]int64, string) {
-	// injecting only when an exponent is given, a negative one means an honest run
-	if exponent >= 0 {
-		// building Λ = 2^exponent as a 128-bit integer: the number 1 (high half
-		// 0, low half 1), shifted left by 'exponent' bits
-		lambda := uint128.MakeUint128(0, 1)
-		lambda.LshInPlace(uint(exponent))
-
-		// attaching the hook, which Nudge calls with the three servers' additive
-		// shares of the product U * v (one entry per user), right before the
-		// servers reshare it in the last iteration of the first component
-		share.AttackHook = func(u0, u1, u2 *share.Matrix[uint128.Uint128]) {
-			// Adding Λ, modulo 2^128, to the victim's entry of server 1's share.
-			// Any server's share would do, since the reshare is linear in each
-			// of them.
-			u1.Data[victim].AddInPlace(lambda)
-		}
-
-		// detaching the hook when the run is over, so that later runs are honest
-		defer func() { share.AttackHook = nil }()
-	}
+	// attaching the injection, and detaching it when the run is over
+	defer inject(victim, exponent)()
 
 	// reading, in the last iteration, the signs of the honest values on the
 	// items the victim did not rate, whose values the injection leaves unchanged
@@ -106,28 +90,73 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 	}
 	defer func() { share.HonestValuesHook = nil }()
 
-	// running Nudge and returning the first row the servers reveal, with the sign
-	return runNudge(U, p), sign
+	// running Nudge for the first component only, and returning the row the
+	// servers reveal, with the sign
+	q := *p
+	q.K = 1
+	return rowAsSigned(runNudge(U, &q), 0), sign
+}
+
+// Model runs Nudge's power iteration on the ratings matrix 'U' in one process
+// that plays all three servers, computing all 'p.K' components, with the same
+// injection as AttackRun: Λ = 2^'exponent' added to server 1's share of the
+// victim's entry in the last iteration of the first component, and none when
+// 'exponent' is negative. It returns the model the servers reveal, one row per
+// component, as signed fixed-point integers (a value x stands for x / 2^N_decimals).
+func Model(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int) [][]int64 {
+	// attaching the injection, and detaching it when the run is over
+	defer inject(victim, exponent)()
+
+	// running Nudge and converting every revealed row
+	B := runNudge(U, p)
+	rows := make([][]int64, B.NRows())
+	for c := range rows {
+		rows[c] = rowAsSigned(B, uint64(c))
+	}
+	return rows
+}
+
+// inject attaches the hook through which server 1 adds Λ = 2^'exponent' to
+// its share of the victim's entry of the matrix-vector product U * v, in the
+// last iteration of the first component (see share.AttackHook). It returns the
+// function that detaches the hook again, so that later runs are honest. A
+// negative 'exponent' means no injection, and then nothing is attached.
+func inject(victim uint64, exponent int) func() {
+	if exponent < 0 {
+		return func() {}
+	}
+
+	// building Λ = 2^exponent as a 128-bit integer: the number 1 (high half
+	// 0, low half 1), shifted left by 'exponent' bits
+	lambda := uint128.MakeUint128(0, 1)
+	lambda.LshInPlace(uint(exponent))
+
+	// attaching the hook, which Nudge calls with the three servers' additive
+	// shares of the product U * v (one entry per user), right before the
+	// servers reshare it in the last iteration of the first component
+	share.AttackHook = func(u0, u1, u2 *share.Matrix[uint128.Uint128]) {
+		// Adding Λ, modulo 2^128, to the victim's entry of server 1's share.
+		// Any server's share would do, since the reshare is linear in each
+		// of them.
+		u1.Data[victim].AddInPlace(lambda)
+	}
+	return func() { share.AttackHook = nil }
 }
 
 // runNudge splits the ratings matrix 'U' into secret shares for the three
 // servers and runs Nudge's power iteration on them, in one process that plays
-// all three servers, with whichever hooks are attached. Only the first
-// component is computed. It returns the first revealed row as signed
-// fixed-point integers.
-func runNudge(U *share.Matrix[uint64], p *params.PowerItParams) []int64 {
-	// computing only the first component, without changing the caller's parameters
-	q := *p
-	q.K = 1
-
+// all three servers, with whichever hooks are attached. It returns the model
+// the servers reveal: one row per component, as fixed-point integers in
+// Nudge's own unsigned representation (see rowAsSigned).
+func runNudge(U *share.Matrix[uint64], p *params.PowerItParams) *share.Matrix[uint64] {
 	// splitting the matrix into secret shares for the three servers
 	pool := rand.InitPRGPool(100)
 	U0, U1, U2 := share.ShareMatrixRSS(U, pool)
 
 	// running the power iteration, with the matrix scaled to fixed point as the
 	// protocol prescribes (the last argument)
-	B, _, _ := share.PowerIteration(U0, U1, U2, &q, pool, true)
-	return rowAsSigned(B, 0)
+	B, _, _ := share.PowerIteration(U0, U1, U2, p, pool, true)
+	return B
 }
 
 // rowAsSigned returns row 'i' of a matrix revealed by Nudge as signed numbers.
