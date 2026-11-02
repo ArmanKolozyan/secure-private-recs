@@ -664,8 +664,70 @@ func (s *Server) MatrixAdditiveToRSSDst(m *Matrix[Uint128], out *Matrix[Share128
 func (s *Server) estimateInvSqrt(eval []Uint128, decimals, norm_decimals uint, dst *Uint128) {
 	for i := 0; i < 128; i++ {
 		index := 127 - i - int(decimals)
-		// index /= 2 // NOTE: This is a floor instead of a ceil
-		// TODO: check w/ Alexandra
+		// OLD: index /= 2 // NOTE: This is a floor instead of a ceil
+		// TODO: check fix below w/ Alexandra
+
+		// The normalization scales the vector v to length 1 by multiplying it by
+		// 1/||v||, which it computes with Newton's method. That method starts from
+		// a first guess x and then updates x := x * (3 - ||v||^2 * x^2) / 2 five
+		// times. It converges to 1/||v|| from any guess above 0 and below the limit
+		// of sqrt(3) (≈ 1.73) times 1/||v||. From a guess between the limit and
+		// 2 times 1/||v|| the first update is negative, and the method then
+		// converges to -1/||v|| instead, so v comes out with the wrong sign. From
+		// a guess just below the limit, say 1.7 times 1/||v||, the factor
+		// 3 - ||v||^2 * x^2 is nearly 0, the first update lands at about 0.09
+		// times 1/||v||, and five updates only climb back to about 0.45 times
+		// 1/||v||. v is then multiplied by 0.45 times 1/||v|| and ends up with
+		// length 0.45 instead of 1.
+		//
+		// The guess is made from the rough size of ||v||^2. Let index be the
+		// integer with 2^index <= ||v||^2 < 2^(index+1). Then ||v||^2 is roughly
+		// 2^index, so 1/||v|| is roughly 1/sqrt(2^index) = 2^(-index/2). We take
+		// 2^(-index/2) as our guess. It lies between 1 and sqrt(2) times 1/||v||,
+		// inside the limit, because ||v||^2 >= 2^index gives
+		// 1/||v|| <= 2^(-index/2) and ||v||^2 < 2^(index+1) gives
+		// 1/||v|| > 2^(-index/2) / sqrt(2).
+		//
+		// Put differently, index is the position of the highest 1 bit of ||v||^2
+		// in binary. The servers only hold shares of ||v||^2 and cannot see that
+		// position, so this loop tries every possible one. All numbers here are
+		// 128-bit integers, so the highest 1 bit is one of bits 0 to 127, and
+		// round i of the loop assumes it is bit 127 - i. The integer that stores
+		// ||v||^2 is ||v||^2 * 2^decimals, where 'decimals' is the parameter of
+		// this function, the number of binary places moved to make it a whole
+		// number (20 by default). So bit p of the stored integer means
+		// index = p - decimals, and for round i that is 127 - i - decimals, the
+		// (non-comment) line above.
+		//
+		// When index is odd, index/2 is not an integer, but the guess is made by
+		// shifting a 1 by a whole number of bits, so index/2 must be rounded.
+		// Rounding it down, say 1.5 to 1, gives the guess 2^-1 instead of 2^-1.5,
+		// which is sqrt(2) times larger. Our guess 2^(-index/2) was already up to
+		// sqrt(2) times 1/||v||, and the two factors multiply, so the rounded-down
+		// guess can get close to 2 times 1/||v||, beyond the limit of sqrt(3) times
+		// 1/||v|| above which v comes out with the wrong sign. Rounding up, 1.5 to
+		// 2, gives 2^-2 instead, sqrt(2) times smaller. Before rounding, the guess
+		// is between 1 and sqrt(2) times 1/||v||, as shown above. Rounding up
+		// divides it by sqrt(2), so for an odd index the guess ends up between
+		// 1/sqrt(2) and 1 times 1/||v||. An even index is not rounded and keeps a
+		// guess between 1 and sqrt(2) times 1/||v||. So every guess is between
+		// 1/sqrt(2) and sqrt(2) times 1/||v||, inside the limit.
+		//
+		// So we need to round up. Go drops the fraction when dividing integers,
+		// 3/2 = 1, so adding 1 first rounds up: (3 + 1)/2 = 2. (For a negative
+		// index, which would need ||v||^2 < 1, the +1 can change an even index
+		// too, (-2 + 1)/2 = 0, but Newton's method still converges from the
+		// resulting guess.)
+		//
+		// Summary:
+		// The normalization needs to multiply by 1/||v||, which it gets from
+		// Newton's method.
+		// Newton's method only works from a starting guess below sqrt(3) times
+		// 1/||v||.
+		// The guess is 2^(-index/2), where 2^index is the largest power of 2 not
+		// above ||v||^2. It is at most sqrt(2) times 1/||v||.
+		// Rounding index/2 down made it up to 2 times 1/||v||, beyond the limit.
+		// Rounding up keeps it at most 1 times 1/||v||.
 		index = (index + 1) / 2
 		if int(norm_decimals) >= index {
 			coeff := MakeUint128(0, 1)
