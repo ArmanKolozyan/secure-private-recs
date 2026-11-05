@@ -3,56 +3,56 @@ the two honest models differ
 honest model, row lengths: [1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000]
 
 victim user 18, who rated 20 items
-  other 942 users, honest run vs honest run: 9 lists changed, 0.01 items replaced per user on average, at most 1
+  other 942 users, honest run vs honest run: 3 lists changed, 0.00 items replaced per user on average, at most 1
   victim's honest list:   [285 299 268 301 327 300 271 49 332 747 270 339 288 314 180 306 172 689 750 346]
     victim's unrated items with score 0: 0 of 1662
-  injection 2^68, verdict on the first row: LEAK
+  injection 2^68 into component 0, verdict on that row: LEAK
   attacked model, row lengths: [0.999 1.000 1.000 1.000 1.000 1.000 1.000 1.000]
-  other 942 users, honest run vs attacked run: 813 lists changed, 2.88 items replaced per user on average, at most 16
+  other 942 users, honest run vs attacked run: 814 lists changed, 2.88 items replaced per user on average, at most 16
   victim's attacked list: [299 285 301 268 327 332 271 300 747 288 314 306 339 325 244 49 270 689 326 750]
     items kept from the honest list: 17 of 20
     victim's unrated items with score 0: 0 of 1662
 
 victim user 376, who rated 33 items
-  other 942 users, honest run vs honest run: 9 lists changed, 0.01 items replaced per user on average, at most 1
+  other 942 users, honest run vs honest run: 3 lists changed, 0.00 items replaced per user on average, at most 1
   victim's honest list:   [299 285 301 327 268 332 49 180 306 325 326 300 288 244 339 689 321 173 878 314]
     victim's unrated items with score 0: 0 of 1649
-  injection 2^68, verdict on the first row: LEAK
+  injection 2^68 into component 0, verdict on that row: LEAK
   attacked model, row lengths: [1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000]
-  other 942 users, honest run vs attacked run: 840 lists changed, 3.24 items replaced per user on average, at most 20
-  victim's attacked list: [299 285 301 327 332 268 306 300 244 321 288 325 339 326 331 689 346 314 309 269]
+  other 942 users, honest run vs attacked run: 839 lists changed, 3.24 items replaced per user on average, at most 20
+  victim's attacked list: [299 285 327 301 332 268 306 300 321 244 288 325 326 339 331 689 346 314 309 269]
     items kept from the honest list: 16 of 20
     victim's unrated items with score 0: 0 of 1649
 
 victim user 53, who rated 65 items
-  other 942 users, honest run vs honest run: 9 lists changed, 0.01 items replaced per user on average, at most 1
+  other 942 users, honest run vs honest run: 3 lists changed, 0.00 items replaced per user on average, at most 1
   victim's honest list:   [293 299 221 281 285 124 8 14 322 677 110 234 507 590 321 292 283 627 1046 288]
     victim's unrated items with score 0: 0 of 1617
-  injection 2^68, verdict on the first row: LEAK
+  injection 2^68 into component 0, verdict on that row: LEAK
   attacked model, row lengths: [1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000]
-  other 942 users, honest run vs attacked run: 815 lists changed, 2.94 items replaced per user on average, at most 17
+  other 942 users, honest run vs attacked run: 812 lists changed, 2.95 items replaced per user on average, at most 17
   victim's attacked list: [293 299 285 221 281 124 322 8 14 677 110 234 321 507 590 283 288 627 1046 292]
     items kept from the honest list: 20 of 20
     victim's unrated items with score 0: 0 of 1617
 
 victim user 600, who rated 148 items
-  other 942 users, honest run vs honest run: 8 lists changed, 0.01 items replaced per user on average, at most 1
-  victim's honest list:   [0 6 116 78 422 236 24 88 201 94 27 143 215 545 234 110 741 264 193 431]
+  other 942 users, honest run vs honest run: 3 lists changed, 0.00 items replaced per user on average, at most 1
+  victim's honest list:   [0 6 116 78 422 236 24 88 201 94 27 143 215 545 234 110 741 264 193 96]
     victim's unrated items with score 0: 0 of 1534
-  injection 2^68, verdict on the first row: LEAK
+  injection 2^68 into component 0, verdict on that row: LEAK
   attacked model, row lengths: [0.998 1.000 1.000 1.000 1.000 1.000 1.000 1.000]
-  other 942 users, honest run vs attacked run: 765 lists changed, 2.66 items replaced per user on average, at most 14
-  victim's attacked list: [0 116 6 236 78 422 24 27 88 545 741 201 215 96 143 110 264 193 567 281]
-    items kept from the honest list: 17 of 20
+  other 942 users, honest run vs attacked run: 764 lists changed, 2.66 items replaced per user on average, at most 14
+  victim's attacked list: [0 116 6 236 78 422 24 27 88 545 741 201 215 96 143 110 264 193 567 94]
+    items kept from the honest list: 19 of 20
     victim's unrated items with score 0: 0 of 1534
 
 victim user 404, who rated 737 items
-  other 942 users, honest run vs honest run: 9 lists changed, 0.01 items replaced per user on average, at most 1
+  other 942 users, honest run vs honest run: 3 lists changed, 0.00 items replaced per user on average, at most 1
   victim's honest list:   [154 630 505 152 635 153 163 166 158 16 156 484 159 222 133 615 487 151 144 161]
     victim's unrated items with score 0: 0 of 945
-  injection 2^68, verdict on the first row: LEAK
+  injection 2^68 into component 0, verdict on that row: LEAK
   attacked model, row lengths: [0.994 1.000 1.000 1.000 1.000 1.000 1.000 1.000]
-  other 942 users, honest run vs attacked run: 763 lists changed, 2.56 items replaced per user on average, at most 16
+  other 942 users, honest run vs attacked run: 764 lists changed, 2.56 items replaced per user on average, at most 16
   victim's attacked list: [152 153 154 630 163 505 635 156 158 495 143 133 473 166 16 162 484 161 132 222]
     items kept from the honest list: 15 of 20
     victim's unrated items with score 0: 0 of 945
