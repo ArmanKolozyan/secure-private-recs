@@ -9,12 +9,12 @@ import (
 	"github.com/NudgeArtifact/private-recs/uint128"
 )
 
-// HonestRun runs Nudge's power iteration honestly on the ratings matrix 'U', in
-// one process that plays all three servers. Only the first component is
+// HonestRun runs Nudge's power iteration honestly on the ratings matrix 'U',
+// in one process that plays all three servers. Only the first component is
 // computed, since the attack concerns only the first revealed row. It returns
 // h, the vector that entered normalization in the last iteration, in real
-// units. Nudge does not reveal h, so it is read with the share.HonestValuesHook
-// hook.
+// units. Nudge does not reveal h, so it is read with the
+// share.HonestValuesHook hook.
 func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 	// attaching the hook that reads h, and detaching it when the run is over
 	var h []float64
@@ -51,8 +51,9 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 // injection does not change: "positive" when they are all at least 0,
 // "negative" when they are all at most 0, and "mixed" otherwise.
 func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int) ([]int64, string) {
-	// attaching the injection, and detaching it when the run is over
-	defer inject(victim, exponent)()
+	// attaching the injection into the first component, and detaching it when
+	// the run is over
+	defer inject(victim, exponent, 0)()
 
 	// reading, in the last iteration, the signs of the honest values on the
 	// items the victim did not rate, whose values the injection leaves unchanged
@@ -67,8 +68,9 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 			if rated[j] {
 				continue
 			}
-			// Putting the value back together from the servers' shares, in 128
-			// bits.
+			
+			// putting the value back together from the servers' shares, in 128
+			// bits
 			x := uint128.Add(&h0.Data[j].First, &h0.Data[j].Second)
 			x.AddInPlace(&h1.Data[j].First)
 			switch {
@@ -98,14 +100,18 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 }
 
 // Model runs Nudge's power iteration on the ratings matrix 'U' in one process
-// that plays all three servers, computing all 'p.K' components, with the same
-// injection as AttackRun: Λ = 2^'exponent' added to server 1's share of the
-// victim's entry in the last iteration of the first component, and none when
-// 'exponent' is negative. It returns the model the servers reveal, one row per
-// component, as signed fixed-point integers (a value x stands for x / 2^N_decimals).
-func Model(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int) [][]int64 {
+// that plays all three servers, and computes all 'p.K' components. It adds
+// Λ = 2^'exponent' to server 1's share of the victim's entry as AttackRun
+// does, in the last iteration of component 'component' (0 for the first,
+// p.K-1 for the last). A negative 'exponent' means no injection.
+// Nudge computes every row at right angles to the rows revealed before it, so
+// an injection into a later component leaves the earlier rows as in an honest
+// run, and the injected row is made orthogonal to them before it is revealed.
+// It returns the model the servers reveal, one row per component, as signed
+// fixed-point integers (a value x stands for x / 2^N_decimals).
+func Model(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int, component int) [][]int64 {
 	// attaching the injection, and detaching it when the run is over
-	defer inject(victim, exponent)()
+	defer inject(victim, exponent, component)()
 
 	// running Nudge and converting every revealed row
 	B := runNudge(U, p)
@@ -118,10 +124,10 @@ func Model(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, expo
 
 // inject attaches the hook through which server 1 adds Λ = 2^'exponent' to
 // its share of the victim's entry of the matrix-vector product U * v, in the
-// last iteration of the first component (see share.AttackHook). It returns the
-// function that detaches the hook again, so that later runs are honest. A
+// last iteration of component 'component' (see share.AttackHook). It returns
+// the function that detaches the hook again, so that later runs are honest. A
 // negative 'exponent' means no injection, and then nothing is attached.
-func inject(victim uint64, exponent int) func() {
+func inject(victim uint64, exponent int, component int) func() {
 	if exponent < 0 {
 		return func() {}
 	}
@@ -131,10 +137,16 @@ func inject(victim uint64, exponent int) func() {
 	lambda := uint128.MakeUint128(0, 1)
 	lambda.LshInPlace(uint(exponent))
 
-	// attaching the hook, which Nudge calls with the three servers' additive
-	// shares of the product U * v (one entry per user), right before the
-	// servers reshare it in the last iteration of the first component
-	share.AttackHook = func(u0, u1, u2 *share.Matrix[uint128.Uint128]) {
+	// attaching the hook, which Nudge calls in the last iteration of every
+	// component with the index of the component and the three servers'
+	// additive shares of the product U * v (one entry per user), right before
+	// the servers reshare it
+	share.AttackHook = func(c int, u0, u1, u2 *share.Matrix[uint128.Uint128]) {
+		// leaving every other component alone
+		if c != component {
+			return
+		}
+
 		// Adding Λ, modulo 2^128, to the victim's entry of server 1's share.
 		// Any server's share would do, since the reshare is linear in each
 		// of them.

@@ -2,7 +2,9 @@
 // against Nudge's training. In the attack, one malicious server adds an
 // integer Λ (the injection) to a chosen user's coordinate of an intermediate
 // vector in the last power-iteration step, so that the first model row the
-// servers reveal exposes which items that user rated.
+// servers reveal exposes which items that user rated. The injection can also
+// go into a later component (see Model), whose row is then made orthogonal to
+// the honest rows before it is revealed.
 //
 // The files, from the inputs to the outcome:
 //   - matrices.go: synthetic ratings matrices with a victim, and Load, which
@@ -19,8 +21,10 @@
 //     are about the eigenvalue times the eigenvector's coordinates, and (2)
 //     by how much the total number of ratings, which the attacker uses in place
 //     of the eigenvalue, exceeds it
-//   - guess.go: the attacker's guess for the victim's items from a revealed row
-//   - verdict.go: the experiment's verdict on that guess
+//   - guess.go: the attacker's guess for the victim's items from a revealed
+//     row, and from the injected row and the rows before it when the injection
+//     went into a later component
+//   - verdict.go: the experiment's verdict on those guesses
 //   - results.go: the result of each attack run, as one CSV line
 //   - recs.go: the recommendations Nudge serves from a revealed model, and
 //     how the lists of two models differ, to see whether the attack shows in

@@ -10,9 +10,9 @@ import . "github.com/NudgeArtifact/private-recs/uint128"
 var HonestValuesHook func(h0, h1, h2 *Matrix[Share128])
 
 // AttackHook lets an experiment make one server deviate from Nudge's
-// protocol. When it is not nil, PowerIteration calls it once, in the last
-// iteration of the first component, with the three servers' additive shares of
-// the matrix-vector product U * v of the ratings matrix and the current vector,
-// which has one entry per user, right before the servers reshare it. The hook
-// may change the shares.
-var AttackHook func(u0, u1, u2 *Matrix[Uint128])
+// protocol. When it is not nil, PowerIteration calls it in the last iteration
+// of every component, with the index of that component (0 for the first) and
+// the three servers' additive shares of the matrix-vector product U * v of the
+// ratings matrix and the current vector, which has one entry per user, right
+// before the servers reshare it. The hook may change the shares.
+var AttackHook func(component int, u0, u1, u2 *Matrix[Uint128])

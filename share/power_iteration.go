@@ -165,8 +165,8 @@ func PowerIteration(U0, U1, U2 *Matrix[Share128], params *PowerItParams, pool *P
 
 				// handing the additive shares of the product U * v to an experiment right
 				// before they are reshared, if one is attached (see AttackHook)
-				if AttackHook != nil && component == 0 && iter == params.N_iters-1 {
-					AttackHook(u0_add, u1_add, u2_add)
+				if AttackHook != nil && iter == params.N_iters-1 {
+					AttackHook(component, u0_add, u1_add, u2_add)
 				}
 
 				// Re-sharing: turn additive shares of [u] into RSS ones
