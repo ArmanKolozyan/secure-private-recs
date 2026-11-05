@@ -1,27 +1,51 @@
 // This program tests whether the attack shows in the recommendations. In the
 // attack, one malicious Nudge server adds a large integer Λ to its share of the
 // victim's entry of the product of the ratings matrix and the current vector,
-// in the last iteration of the first component (see AttackRun), which makes
-// the first model row the servers reveal expose the items the victim rated.
-// The later rows are computed at right angles to that row, so the whole model
-// changes, and with it every user's recommendations.
+// in the last iteration of one component (see Model), which makes the model
+// row of that component expose the items the victim rated. By default the
+// injection goes into the first component, as in AttackRun. The later rows
+// are then computed at right angles to the injected row, so the whole model
+// changes, and with it every user's recommendations. With -component K-1 the
+// injection goes into the last component instead. The earlier rows then stay
+// honest, and the injected row is made orthogonal to them before it is
+// revealed, so only the last row of the model changes. For that row the
+// program prints two verdicts. The first judges the guess made from the
+// injected row alone, its k largest entries ignoring the sign (see
+// 'AttackerGuess'). The second judges the guess that also uses the earlier
+// rows, to add back what the orthogonalization removed (see
+// 'AttackerGuessWithEarlierRows').
 //
 // The program runs Nudge honestly twice and, for each victim of the matrix,
 // once with the injection Λ = 2^exponent, computing all components of the
-// model (see Model). From each revealed model it computes every user's list of
-// the -top items with the highest scores among the items the user has not
-// rated, as Nudge serves them (see Scores and TopItems). It then prints, for
-// every user but the victim, how the lists of the two honest runs differ,
-// which is the difference Nudge's own randomness makes, and how the lists of
-// the attacked run differ from those of the first honest run. The victim's
-// own lists are printed separately. With them comes the number of the
-// victim's unrated items whose score is exactly 0. In exact arithmetic the
-// attack would give all of them score 0, because the model's rows are at
-// right angles to the victim's ratings row except for the first, which lies
-// along it and has nothing on the unrated items. Without -exponent, only the
-// two honest runs are compared.
+// model. From each revealed model it computes every user's list of the -top
+// items with the highest scores among the items the user has not rated, as
+// Nudge serves them (see 'Scores' and 'TopItems'). It then prints, for every
+// user but the victim, how the lists of the two honest runs differ, which is
+// the difference Nudge's own randomness makes, and how the lists of the
+// attacked run differ from those of the first honest run. The victim's own
+// lists are printed separately. With them comes the number of the victim's
+// unrated items whose score is exactly 0. In exact arithmetic the attack would
+// give all of them score 0. Nudge computes a user's score for an item as a sum
+// over the model's rows of (the user's number for the row) * (the row's entry
+// for the item), where the user's number for a row is the row's entries summed
+// over the items the user rated. For the victim these products add up, after
+// the attack, to the victim's own ratings row. With the injection into the
+// first component, the injected row is the ratings row scaled to length 1, the
+// victim's number for it is exactly the factor that undoes that scaling, and
+// the victim's number for every later row is 0, because the later rows are
+// orthogonal to the injected one. With a later component the earlier rows take
+// part too. The victim's numbers for them are exactly the multiples of them
+// that the orthogonalization subtracted from the ratings row, so (number) *
+// (row) puts those back, the number for the injected row is again the factor
+// that undoes its scaling, and the rows after it have number 0. Either way the
+// victim scores 1 on every rated item and 0 on every unrated item. The list is
+// made of the unrated items with the highest scores, so all of them tie at
+// 0... In Nudge they are not exactly 0. For a large Λ the injected row comes
+// out slightly shorter than 1 (Nudge stores 1/length with only 40 fractional
+// bits), so a small multiple of the victim's honest scores survives.
 //
 //	make run CMD=./attacks/leakageAttack/cmd/recs ARGS="-matrix ml100k -params params/movielens_tiny_params.json -exponent 68"
+//	make run CMD=./attacks/leakageAttack/cmd/recs ARGS="-matrix ml100k -params params/movielens_tiny_params.json -exponent 68 -component 7"
 package main
 
 import (
@@ -42,6 +66,7 @@ func main() {
 	name := flag.String("matrix", "80x24", "name of a matrix: one listed in Matrices, ml100k or ml100k-40 (see Load)")
 	paramsPath := flag.String("params", "params/cheap_params.json", "power-iteration parameters")
 	exponent := flag.Int("exponent", -1, "inject Λ = 2^exponent, from 0 to 127; -1 means no injection")
+	component := flag.Int("component", 0, "component in whose last iteration Λ is injected: 0 for the first, K-1 for the last")
 	top := flag.Int("top", 20, "number of items in every user's list of recommendations")
 	randomStart := flag.Bool("random-start", false, "start power iteration from Nudge's random vector instead of all-ones")
 	flag.Parse()
@@ -67,6 +92,12 @@ func main() {
 	// loading the parameters and setting the start vector of power iteration
 	p := params.FromJSON(*paramsPath)
 	p.Start_random = *randomStart
+
+	// rejecting a component the model does not have
+	if *component < 0 || *component >= p.K {
+		fmt.Fprintf(os.Stderr, "the component must be between 0 and %d\n", p.K-1)
+		os.Exit(2)
+	}
 	start := "ones"
 	if *randomStart {
 		start = "random"
@@ -74,8 +105,8 @@ func main() {
 
 	// running Nudge honestly twice, to see how much Nudge's own randomness
 	// changes the lists, and computing every user's list from each model
-	honest := leakageattack.Model(U, p, 0, -1)
-	again := leakageattack.Model(U, p, 0, -1)
+	honest := leakageattack.Model(U, p, 0, -1, 0)
+	again := leakageattack.Model(U, p, 0, -1, 0)
 	honestLists := leakageattack.Recommendations(U, honest, *top)
 	againLists := leakageattack.Recommendations(U, again, *top)
 
@@ -106,10 +137,17 @@ func main() {
 			continue
 		}
 
-		// running Nudge with the injection aimed at this victim, and checking
-		// on the first revealed row that the attack worked
-		attacked := leakageattack.Model(U, p, victim, *exponent)
-		fmt.Printf("  injection 2^%d, verdict on the first row: %s\n", *exponent, leakageattack.AttackVerdict(attacked[0], items))
+		// Running Nudge with the injection aimed at this victim, and checking
+		// on the injected row that the attack worked. For a later component
+		// also with the guess that adds back what the orthogonalization removed
+		attacked := leakageattack.Model(U, p, victim, *exponent, *component)
+		verdict := leakageattack.AttackVerdict(attacked[*component], items)
+		if *component == 0 {
+			fmt.Printf("  injection 2^%d into component 0, verdict on that row: %s\n", *exponent, verdict)
+		} else {
+			fmt.Printf("  injection 2^%d into component %d, verdict on that row: %s by the k largest entries, %s after adding back the part along the earlier rows\n",
+				*exponent, *component, verdict, leakageattack.AttackVerdictWithEarlierRows(attacked[:*component+1], items))
+		}
 		fmt.Printf("  attacked model, row lengths: %s\n", rowLengths(attacked, p.N_decimals))
 
 		// comparing the other users' lists between the honest and the attacked run
