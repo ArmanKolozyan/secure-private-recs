@@ -26,6 +26,22 @@ const (
 // because it generated the matrix. The verdict is LEAK when the guess is
 // exactly 'items', NOLEAK otherwise, and UNDERFLOW when the row is all zeros.
 func AttackVerdict(row []int64, items []uint64) Verdict {
+	return judge(row, AttackerGuess(row, len(items)), items)
+}
+
+// AttackVerdictWithEarlierRows is the verdict for an injection into a later
+// component, judged with the guess that adds back the part of the victim's
+// ratings row along the earlier rows (see AttackerGuessWithEarlierRows).
+// 'rows' are the revealed rows up to and including the injected one, 'items'
+// the items the victim actually rated.
+func AttackVerdictWithEarlierRows(rows [][]int64, items []uint64) Verdict {
+	return judge(rows[len(rows)-1], AttackerGuessWithEarlierRows(rows, len(items)), items)
+}
+
+// judge gives the verdict on the guess 'guess' for the injected row 'row':
+// UNDERFLOW when the row is all zeros, LEAK when the guess is exactly the
+// items 'items' the victim rated, NOLEAK otherwise.
+func judge(row []int64, guess []uint64, items []uint64) Verdict {
 	// checking for the all-zero row
 	allZero := true
 	for _, x := range row {
@@ -38,12 +54,12 @@ func AttackVerdict(row []int64, items []uint64) Verdict {
 		return Underflow
 	}
 
-	// comparing the attacker's guess with the items the victim actually rated
+	// comparing the guess with the items the victim actually rated
 	isRated := make(map[uint64]bool, len(items))
 	for _, j := range items {
 		isRated[j] = true
 	}
-	for _, j := range AttackerGuess(row, len(items)) {
+	for _, j := range guess {
 		if !isRated[j] {
 			return NoLeak
 		}
