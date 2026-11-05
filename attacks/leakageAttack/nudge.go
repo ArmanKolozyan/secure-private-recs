@@ -50,6 +50,12 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 // iteration, read on the items the victim did not rate, whose values the
 // injection does not change: "positive" when they are all at least 0,
 // "negative" when they are all at most 0, and "mixed" otherwise.
+//
+// 'Model' also runs the attack, with the injection into any component, and
+// computes all components. 'AttackRun' exists here separately because it
+// computes only the first component, which keeps a sweep of thousands of
+// runs fast, and it returns the sign of the honest values, which the sweeps
+// record.
 func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, exponent int) ([]int64, string) {
 	// attaching the injection into the first component, and detaching it when
 	// the run is over
@@ -68,7 +74,7 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 			if rated[j] {
 				continue
 			}
-			
+
 			// putting the value back together from the servers' shares, in 128
 			// bits
 			x := uint128.Add(&h0.Data[j].First, &h0.Data[j].Second)
@@ -101,9 +107,9 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 
 // Model runs Nudge's power iteration on the ratings matrix 'U' in one process
 // that plays all three servers, and computes all 'p.K' components. It adds
-// Λ = 2^'exponent' to server 1's share of the victim's entry as AttackRun
+// Λ = 2^'exponent' to server 1's share of the victim's entry as 'AttackRun'
 // does, in the last iteration of component 'component' (0 for the first,
-// p.K-1 for the last). A negative 'exponent' means no injection.
+// 'p.K'-1 for the last). A negative 'exponent' means no injection.
 // Nudge computes every row at right angles to the rows revealed before it, so
 // an injection into a later component leaves the earlier rows as in an honest
 // run, and the injected row is made orthogonal to them before it is revealed.
