@@ -163,7 +163,7 @@ func PowerIteration(U0, U1, U2 *Matrix[Share128], params *PowerItParams, pool *P
 					trunc_saved += 1
 				}
 
-				// handing the additive shares of the product U * v to an experiment right
+				// handing the additive shares of the product U * v to a hook right
 				// before they are reshared, if one is attached (see AttackHook)
 				if AttackHook != nil && iter == params.N_iters-1 {
 					AttackHook(component, u0_add, u1_add, u2_add)

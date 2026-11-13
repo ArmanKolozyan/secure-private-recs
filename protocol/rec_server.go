@@ -83,6 +83,13 @@ func (s *RecServer) ServeRecsWithoutClustering(clientId *uint64, ans *RecAnswer)
 
 	mat := MatrixZeros[Uint128](s.ItemEmbs[0].Rows, clientEmb.Cols)
 	MatrixMulMixedDst(&s.ItemEmbs[0], &clientEmb, mat) // all data is just stored in cluster 0
+
+	// handing this server's share of the user's scores to a hook right
+	// before it is sent, if one is attached (see ServingHook)
+	if ServingHook != nil {
+		ServingHook(s.Id, *clientId, mat)
+	}
+
 	res := []Matrix[Uint128]{*mat}
 	*ans = res
 
