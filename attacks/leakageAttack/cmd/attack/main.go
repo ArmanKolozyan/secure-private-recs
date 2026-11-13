@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/NudgeArtifact/private-recs/attacks/common"
 	leakageattack "github.com/NudgeArtifact/private-recs/attacks/leakageAttack"
 	"github.com/NudgeArtifact/private-recs/params"
 )
@@ -69,7 +70,7 @@ func main() {
 
 		// reading the items the victim actually rated, which only the experiment
 		// knows, to judge the attacker's guess
-		items := leakageattack.ItemsRatedBy(U, victim)
+		items := common.ItemsRatedBy(U, victim)
 
 		// printing the revealed row, the attacker's guess for the victim's items
 		// and the items the victim actually rated, but only for matrices with at

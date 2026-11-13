@@ -3,8 +3,8 @@ package leakageattack
 import (
 	"math"
 
+	"github.com/NudgeArtifact/private-recs/attacks/common"
 	"github.com/NudgeArtifact/private-recs/params"
-	"github.com/NudgeArtifact/private-recs/rand"
 	"github.com/NudgeArtifact/private-recs/share"
 	"github.com/NudgeArtifact/private-recs/uint128"
 )
@@ -34,7 +34,7 @@ func HonestRun(U *share.Matrix[uint64], p *params.PowerItParams) []float64 {
 	// running Nudge for the first component only, during which the hook fills 'h'
 	q := *p
 	q.K = 1
-	runNudge(U, &q)
+	common.Train(U, &q)
 	return h
 }
 
@@ -64,7 +64,7 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 	// reading, in the last iteration, the signs of the honest values on the
 	// items the victim did not rate, whose values the injection leaves unchanged
 	rated := make([]bool, U.NCols())
-	for _, j := range ItemsRatedBy(U, victim) {
+	for _, j := range common.ItemsRatedBy(U, victim) {
 		rated[j] = true
 	}
 	sign := ""
@@ -102,7 +102,7 @@ func AttackRun(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, 
 	// servers reveal, with the sign
 	q := *p
 	q.K = 1
-	return rowAsSigned(runNudge(U, &q), 0), sign
+	return common.Train(U, &q)[0], sign
 }
 
 // Model runs Nudge's power iteration on the ratings matrix 'U' in one process
@@ -119,13 +119,8 @@ func Model(U *share.Matrix[uint64], p *params.PowerItParams, victim uint64, expo
 	// attaching the injection, and detaching it when the run is over
 	defer inject(victim, exponent, component)()
 
-	// running Nudge and converting every revealed row
-	B := runNudge(U, p)
-	rows := make([][]int64, B.NRows())
-	for c := range rows {
-		rows[c] = rowAsSigned(B, uint64(c))
-	}
-	return rows
+	// running Nudge and returning the rows the servers reveal
+	return common.Train(U, p)
 }
 
 // inject attaches the hook through which server 1 adds Λ = 2^'exponent' to
@@ -159,32 +154,4 @@ func inject(victim uint64, exponent int, component int) func() {
 		u1.Data[victim].AddInPlace(lambda)
 	}
 	return func() { share.AttackHook = nil }
-}
-
-// runNudge splits the ratings matrix 'U' into secret shares for the three
-// servers and runs Nudge's power iteration on them, in one process that plays
-// all three servers, with whichever hooks are attached. It returns the model
-// the servers reveal: one row per component, as fixed-point integers in
-// Nudge's own unsigned representation (see rowAsSigned).
-func runNudge(U *share.Matrix[uint64], p *params.PowerItParams) *share.Matrix[uint64] {
-	// splitting the matrix into secret shares for the three servers
-	pool := rand.InitPRGPool(100)
-	U0, U1, U2 := share.ShareMatrixRSS(U, pool)
-
-	// running the power iteration, with the matrix scaled to fixed point as the
-	// protocol prescribes (the last argument)
-	B, _, _ := share.PowerIteration(U0, U1, U2, p, pool, true)
-	return B
-}
-
-// rowAsSigned returns row 'i' of a matrix revealed by Nudge as signed numbers.
-// Nudge stores a negative value in a uint64 in two's complement, so the
-// conversion is a reinterpretation of the bits.
-// Example: row [5, 18446744073709551615] becomes [5, -1].
-func rowAsSigned(B *share.Matrix[uint64], i uint64) []int64 {
-	row := make([]int64, B.NCols())
-	for j := range row {
-		row[j] = int64(*B.Get(i, uint64(j)))
-	}
-	return row
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/NudgeArtifact/private-recs/attacks/common"
 	"github.com/NudgeArtifact/private-recs/params"
 	"github.com/NudgeArtifact/private-recs/share"
 )
@@ -41,7 +42,7 @@ type VictimBounds struct {
 // honest values on and off the victim's items, taken from 'h' (see HonestRun),
 // and the bounds on the injection.
 func Bounds(U *share.Matrix[uint64], row uint64, h []float64, p *params.PowerItParams) VictimBounds {
-	bounds := VictimBounds{Row: row, RatedItems: ItemsRatedBy(U, row), HOnMin: math.Inf(1)}
+	bounds := VictimBounds{Row: row, RatedItems: common.ItemsRatedBy(U, row), HOnMin: math.Inf(1)}
 	rated := make([]bool, U.NCols())
 	for _, j := range bounds.RatedItems {
 		rated[j] = true

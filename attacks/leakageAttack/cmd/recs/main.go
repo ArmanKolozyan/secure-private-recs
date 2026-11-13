@@ -19,7 +19,7 @@
 // once with the injection Λ = 2^exponent, computing all components of the
 // model. From each revealed model it computes every user's list of the -top
 // items with the highest scores among the items the user has not rated, as
-// Nudge serves them (see 'Scores' and 'TopItems'). It then prints, for every
+// Nudge serves them (see 'common.Recommendations'). It then prints, for every
 // user but the victim, how the lists of the two honest runs differ, which is
 // the difference Nudge's own randomness makes, and how the lists of the
 // attacked run differ from those of the first honest run. The victim's own
@@ -56,6 +56,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/NudgeArtifact/private-recs/attacks/common"
 	leakageattack "github.com/NudgeArtifact/private-recs/attacks/leakageAttack"
 	"github.com/NudgeArtifact/private-recs/params"
 	"github.com/NudgeArtifact/private-recs/share"
@@ -105,10 +106,10 @@ func main() {
 
 	// running Nudge honestly twice, to see how much Nudge's own randomness
 	// changes the lists, and computing every user's list from each model
-	honest := leakageattack.Model(U, p, 0, -1, 0)
-	again := leakageattack.Model(U, p, 0, -1, 0)
-	honestLists := leakageattack.Recommendations(U, honest, *top)
-	againLists := leakageattack.Recommendations(U, again, *top)
+	honest := common.Train(U, p)
+	again := common.Train(U, p)
+	honestLists := common.Recommendations(U, honest, *top)
+	againLists := common.Recommendations(U, again, *top)
 
 	// printing the setting, whether the two honest models differ at all
 	fmt.Printf("matrix %s, %d users x %d items, K = %d, %s start, lists of %d items\n", *name, U.NRows(), U.NCols(), p.K, start, *top)
@@ -122,11 +123,11 @@ func main() {
 	// attacking each victim of the matrix in turn
 	for _, victim := range victims {
 		// the items the victim rated, which the verdict on the first row needs
-		items := leakageattack.ItemsRatedBy(U, victim)
+		items := common.ItemsRatedBy(U, victim)
 		fmt.Printf("\nvictim user %d, who rated %d items\n", victim, len(items))
 
 		// comparing the other users' lists between the two honest runs
-		printChanges("honest run vs honest run", leakageattack.CompareLists(honestLists, againLists, victim))
+		printChanges("honest run vs honest run", common.CompareLists(honestLists, againLists, victim))
 
 		// printing the victim's honest list
 		fmt.Printf("  victim's honest list:   %v\n", honestLists[victim])
@@ -151,8 +152,8 @@ func main() {
 		fmt.Printf("  attacked model, row lengths: %s\n", rowLengths(attacked, p.N_decimals))
 
 		// comparing the other users' lists between the honest and the attacked run
-		attackedLists := leakageattack.Recommendations(U, attacked, *top)
-		printChanges("honest run vs attacked run", leakageattack.CompareLists(honestLists, attackedLists, victim))
+		attackedLists := common.Recommendations(U, attacked, *top)
+		printChanges("honest run vs attacked run", common.CompareLists(honestLists, attackedLists, victim))
 
 		// printing the victim's attacked list, how much of the honest list it
 		// keeps, and how many of the victim's unrated items now score 0
@@ -183,7 +184,7 @@ func sameModel(a, b [][]int64) bool {
 
 // printChanges prints one line with the changes between two sets of lists
 // for the users other than the victim (see ListChanges).
-func printChanges(what string, changes leakageattack.ListChanges) {
+func printChanges(what string, changes common.ListChanges) {
 	fmt.Printf("  other %d users, %s: %d lists changed, %.2f items replaced per user on average, at most %d\n",
 		changes.Users, what, changes.Changed, float64(changes.Replaced)/float64(changes.Users), changes.MaxReplaced)
 }
@@ -209,7 +210,7 @@ func rowLengths(B [][]int64, decimals int) string {
 // printZeroScores prints how many of the items the victim has not rated get
 // the score 0 under the model 'B'.
 func printZeroScores(U *share.Matrix[uint64], B [][]int64, victim uint64) {
-	scores := leakageattack.Scores(U, B, victim)
+	scores := common.Scores(U, B, victim)
 	unrated, zero := 0, 0
 	for j := uint64(0); j < U.NCols(); j++ {
 		if *U.Get(victim, j) != 0 {

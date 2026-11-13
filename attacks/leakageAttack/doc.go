@@ -9,8 +9,8 @@
 // The files, from the inputs to the outcome:
 //   - matrices.go: synthetic ratings matrices with a victim, and Load, which
 //     returns any matrix by name together with its victims
-//   - movielens.go: MovieLens 100K as a 0/1 ratings matrix, in full or with
-//     its 40 most-rated movies, and the victims chosen in it
+//   - movielens.go: the victims chosen in MovieLens 100K, in full and with its
+//     40 most-rated movies
 //   - nudge.go: runs of Nudge's power iteration in one process that plays all
 //     three servers, either honest, reading the honest values h, or with the
 //     injection
@@ -26,9 +26,10 @@
 //     went into a later component
 //   - verdict.go: the experiment's verdict on those guesses
 //   - results.go: the result of each attack run, as one CSV line
-//   - recs.go: the recommendations Nudge serves from a revealed model, and
-//     how the lists of two models differ, to see whether the attack shows in
-//     what the users get
+//
+// Loading MovieLens 100K, running Nudge's power iteration and computing the
+// recommendations Nudge serves are shared with the other attacks and live in
+// attacks/common.
 //
 // The command-line programs live in attacks/leakageAttack/cmd.
 package leakageattack

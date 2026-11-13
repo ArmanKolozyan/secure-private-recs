@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/NudgeArtifact/private-recs/attacks/common"
 	leakageattack "github.com/NudgeArtifact/private-recs/attacks/leakageAttack"
 	"github.com/NudgeArtifact/private-recs/params"
 )
@@ -156,7 +157,7 @@ func runChild(name, paramsPath, victim, exponent, start string) {
 
 	// running the attack and printing the verdict and the sign of the honest values
 	revealed, sign := leakageattack.AttackRun(U, p, row, e)
-	fmt.Printf("RESULT %s %s\n", leakageattack.AttackVerdict(revealed, leakageattack.ItemsRatedBy(U, row)), sign)
+	fmt.Printf("RESULT %s %s\n", leakageattack.AttackVerdict(revealed, common.ItemsRatedBy(U, row)), sign)
 }
 
 // runOne starts a copy of this program for one attack run and returns its

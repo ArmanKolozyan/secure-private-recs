@@ -3,6 +3,7 @@ package leakageattack
 import (
 	"math"
 
+	"github.com/NudgeArtifact/private-recs/attacks/common"
 	"github.com/NudgeArtifact/private-recs/share"
 )
 
@@ -54,7 +55,7 @@ func coRating(U *share.Matrix[uint64]) []float64 {
 	n := int(U.NCols())
 	M := make([]float64, n*n)
 	for i := uint64(0); i < U.NRows(); i++ {
-		items := ItemsRatedBy(U, i)
+		items := common.ItemsRatedBy(U, i)
 		for _, a := range items {
 			for _, b := range items {
 				M[int(a)*n+int(b)]++
