@@ -848,6 +848,14 @@ func (s *Server) MatrixRecoverFromRSSDst(m *Matrix[Share128], out *Matrix[uint64
 
 	clear(out.Data)
 
+	// Letting server 0 change what the other two servers reconstruct, if an
+	// experiment has attached RevealHook. Servers 1 and 2 run the unchanged
+	// code below.
+	if s.Id == 0 && RevealHook != nil {
+		s.revealChanged(m, out)
+		return
+	}
+
 	var interm, interm2 Uint128
 	for i := uint64(0); i < rows; i++ {
 		for j := uint64(0); j < cols; j++ {
@@ -895,6 +903,54 @@ func (s *Server) MatrixRecoverFromRSSDst(m *Matrix[Share128], out *Matrix[uint64
 	}
 
 	wg.Wait()
+}
+
+// This function is server 0's part of MatrixRecoverFromRSSDst when RevealHook
+// is attached. In the honest reveal, server 0 sends the sum of its two shares
+// of every value to servers 1 and 2, who add the share they hold, and it
+// receives from server 1 the share it lacks. Here server 0 first receives
+// server 1's shares, which give it the true values, and only then sends its
+// own messages, each shifted by the difference between the value the hook
+// wants and the true value. Servers 1 and 2 therefore reconstruct the values
+// the hook wants.
+func (s *Server) revealChanged(m *Matrix[Share128], out *Matrix[uint64]) {
+	n := m.Rows * m.Cols
+	sums := make([]Uint128, n)
+	truth := make([]uint64, n)
+	var share1, value Uint128
+	for k := uint64(0); k < n; k++ {
+		// computing the honest message, the sum of server 0's two shares
+		AddDst(&m.Data[k].First, &m.Data[k].Second, &sums[k])
+
+		// receiving server 1's share and reconstructing the true value
+		s.network.RecvUint128(1, &share1)
+		AddDst(&sums[k], &share1, &value)
+		truth[k] = ToUint64(&value)
+	}
+
+	// asking the hook for the values servers 1 and 2 are to reconstruct
+	wanted := RevealHook(truth)
+
+	for k := uint64(0); k < n; k++ {
+		// Computing the difference between the wanted and the true value. It
+		// is a signed 64-bit number, so it is extended to 128 bits with its
+		// sign.
+		diff := wanted[k] - truth[k]
+		high := uint64(0)
+		if int64(diff) < 0 {
+			high = ^uint64(0)
+		}
+
+		// sending servers 1 and 2 the honest message plus the difference
+		msg := Add(&sums[k], MakeUint128(high, diff))
+		s.network.AppendUint128(1, msg)
+		s.network.AppendUint128(2, msg)
+
+		// keeping the wanted value too, so that all three servers continue
+		// with the same model
+		out.Data[k] = wanted[k]
+	}
+	s.SendMsgs()
 }
 
 func (s *Server) SendMsgs() {
