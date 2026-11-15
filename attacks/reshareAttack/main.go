@@ -27,6 +27,23 @@
 // hardly anyone rated the target item, and with no honest first row left,
 // SetOrthogonal subtracts nothing more. So the second row comes out as in an
 // honest run.
+//
+// Two other variants of this attack are possible. They change a share in an
+// earlier Reshare of the last step, the one right after the multiplication by
+// the transpose of U. SetOrthogonal and Normalize still run after it, so the
+// changed row keeps length 1 and stays orthogonal to the earlier rows, and
+// unlike here a check of the rows would not catch it.
+//   - In the first variant, a server adds a small amount to the target item's
+//     entry, which pushes the target item into some users' lists.
+//   - In the second variant, a server picks the row it wants the model to have
+//     instead of the honest one, of length 1 and orthogonal to the earlier
+//     rows, and adds a huge multiple of it to its share, for example a million
+//     times the wanted row. The honest numbers are tiny next to the added ones,
+//     so the row now consists almost only of the wanted row, and Normalize,
+//     which scales it back to length 1, gives the wanted row. Doing this for
+//     every row, each time with a new wanted row, the server decides the whole
+//     model without ever seeing a true row.
+//
 // The program trains the model on MovieLens 100K with Nudge's three servers,
 // once honestly and once with the attack. For each model it prints in how many
 // users' lists the target item appears, and how close the rows are to length 1
