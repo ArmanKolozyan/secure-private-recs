@@ -1,6 +1,6 @@
-// This file computes the recommendations Nudge serves from a revealed model,
-// and compares the lists of two models, typically an honest and an attacked
-// one.
+// This file counts the ratings of the items, computes the recommendations
+// Nudge serves from a revealed model, and compares the lists of two models,
+// typically an honest and an attacked one.
 
 package common
 
@@ -19,6 +19,34 @@ func ItemsRatedBy(U *share.Matrix[uint64], i uint64) []uint64 {
 		}
 	}
 	return items
+}
+
+// This function returns the number of ratings of every item in 'U'.
+func RatingsPerItem(U *share.Matrix[uint64]) []int {
+	count := make([]int, U.NCols())
+	for i := uint64(0); i < U.NRows(); i++ {
+		for j := uint64(0); j < U.NCols(); j++ {
+			if *U.Get(i, j) != 0 {
+				count[j]++
+			}
+		}
+	}
+	return count
+}
+
+// This function returns the 'n' items with the fewest ratings in 'U', fewest
+// first, ties broken by the lower item number.
+func LeastRated(U *share.Matrix[uint64], n int) []uint64 {
+	count := RatingsPerItem(U)
+
+	// ordering the items by their count, fewest first, keeping the lower item
+	// number first among equal counts
+	items := make([]uint64, U.NCols())
+	for j := range items {
+		items[j] = uint64(j)
+	}
+	sort.SliceStable(items, func(a, b int) bool { return count[items[a]] < count[items[b]] })
+	return items[:n]
 }
 
 // This function returns the recommendation scores that Nudge's servers send
