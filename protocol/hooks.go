@@ -22,3 +22,15 @@ var ServingHook func(server int, user uint64, scores *Matrix[Uint128])
 // third share (which server 0 lacks). Here server 0 adds the wanted entry minus
 // the true entry to that sum, so servers 1 and 2 compute the wanted entry.
 var RevealHook func(truth []uint64) []uint64
+
+// This hook lets an experiment make one server change a row of the model
+// while the servers compute it. Normalize, which scales the row to length 1,
+// ends with a Reshare, in which every server sends its additive share of the
+// row, masked, to one other server. When the hook is not nil, every server
+// calls it right before this Reshare, with the server's id (0, 1 or 2), the
+// component and the step of the power iteration (both counted from 0), and
+// the server's additive share of the row, one entry per item with N_decimals
+// fractional bits. The hook may change the share. The receiver cannot check
+// it, since a correct share looks random, and hence a change to the share changes
+// the row by the same amount.
+var NormalizeHook func(server, component, step int, row *Matrix[Uint128])

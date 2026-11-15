@@ -26,6 +26,8 @@ type Server struct {
 
 	network *net.Network
 	prgs    []*rand.PrgPool // shared secrets with other servers (own prgs are at position 'Id', shared prgs are at position '4')
+
+	component, step int // where the power iteration is, which NormalizeHook gets
 }
 
 // For now: server initiating connection picks shared seeds
@@ -417,6 +419,9 @@ func (s *Server) PowerIteration(params *PowerItParams, check_proximity, shift_up
 			s.MatrixTruncateRSSToAdditive(v_rss, v_add, uint(params.N_decimals))
 			s.MatrixAdditiveToRSSDst(v_add, v_rss)
 			trunc_saved = 0
+
+			// recording where the power iteration is, for NormalizeHook
+			s.component, s.step = component, iter
 
 			// Normalize the vector
 			s.VectorNormalizeRSSInPlace(v_rss, uint(params.N_decimals), uint(params.Norm_decimals), uint(params.Newton_iters))
@@ -834,6 +839,12 @@ func (s *Server) VectorNormalizeRSSInPlace(v *Matrix[Share128], decimals, norm_d
 
 	// truncate again
 	s.MatrixTruncateRSSToAdditive(v, v_add, norm_decimals)
+
+	// Letting this server change its share of the row before the last
+	// Reshare, if an experiment has attached NormalizeHook.
+	if NormalizeHook != nil {
+		NormalizeHook(s.Id, s.component, s.step, v_add)
+	}
 	s.MatrixAdditiveToRSSDst(v_add, v)
 }
 
