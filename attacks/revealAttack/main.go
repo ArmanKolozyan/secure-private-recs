@@ -60,13 +60,10 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"slices"
-	"sync"
 
 	"github.com/NudgeArtifact/private-recs/attacks/common"
 	"github.com/NudgeArtifact/private-recs/params"
 	"github.com/NudgeArtifact/private-recs/protocol"
-	"github.com/NudgeArtifact/private-recs/share"
 )
 
 const top = 20 // number of items in a list of recommendations
@@ -84,9 +81,9 @@ func main() {
 	// Choosing the target item, which has the fewest ratings, and the popular
 	// item, which has the most. Among items with the same number of ratings,
 	// the one with the lowest number is taken.
-	count := ratingsPerItem(U)
-	target, popular := 0, 0
-	for j := range count {
+	count := common.RatingsPerItem(U)
+	target, popular := uint64(0), uint64(0)
+	for j := range uint64(len(count)) {
 		if count[j] < count[target] {
 			target = j
 		}
@@ -98,19 +95,19 @@ func main() {
 
 	// training the model honestly
 	fmt.Println("training the model honestly with Nudge's three servers")
-	before := report("honest model", U, train(U, p), target, p.N_decimals)
+	before := common.Report("honest model", U, common.TrainWithServers(U, p), target, top, p.N_decimals)
 
 	// case 1, in which server 0 gives the target item the popular item's entry
 	// in every row
 	fmt.Println("case 1: in every row, server 0 gives the target item the popular item's entry, and keeps the rows at length 1")
 	protocol.RevealHook = changeRows(func(row []float64) { row[target] = row[popular] }, p.N_decimals)
-	after1 := report("case 1 model", U, train(U, p), target, p.N_decimals)
+	after1 := common.Report("case 1 model", U, common.TrainWithServers(U, p), target, top, p.N_decimals)
 
 	// case 2, in which server 0 gives the target item 5 times the popular
 	// item's entry in every row
 	fmt.Println("case 2: in every row, server 0 gives the target item 5 times the popular item's entry, and keeps the rows at length 1")
 	protocol.RevealHook = changeRows(func(row []float64) { row[target] = 5 * row[popular] }, p.N_decimals)
-	after2 := report("case 2 model", U, train(U, p), target, p.N_decimals)
+	after2 := common.Report("case 2 model", U, common.TrainWithServers(U, p), target, top, p.N_decimals)
 
 	// checking whether the target item is now in more lists in both cases
 	if min(after1, after2) > before {
@@ -169,117 +166,4 @@ func changeRows(change func(row []float64), decimals int) func(truth []uint64) [
 		}
 		return out
 	}
-}
-
-// This function trains the model on the ratings matrix 'U' with Nudge's three
-// servers, which run in this process and talk to each other over local network
-// connections, as in Nudge's own tests. All three servers end up with the
-// same model. The function returns server 1's copy,
-// one row per component, as signed fixed-point integers.
-func train(U *share.Matrix[uint64], p *params.PowerItParams) [][]int64 {
-	// splitting the ratings matrix into shares for the three servers
-	pool := share.InitPRGPoolFromMatrix(U)
-	U0, U1, U2 := share.ShareMatrixRSS(U, pool)
-	shares := []*share.Matrix[share.Share128]{U0, U1, U2}
-
-	// silencing the servers while they run, since they print a line for nearly
-	// every step
-	null, _ := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
-	stdout := os.Stdout
-	os.Stdout = null
-	defer func() {
-		os.Stdout = stdout
-		null.Close()
-	}()
-
-	// running the three servers and keeping server 1's model
-	var B *share.Matrix[uint64]
-	var wg sync.WaitGroup
-	wg.Add(3)
-	for id := 0; id < 3; id++ {
-		go func(id int) {
-			defer wg.Done()
-			s := protocol.LaunchServerFromMatrix(id, "127.0.0.1", "127.0.0.1", "127.0.0.1", shares[id])
-			s.PowerIteration(p, false, true)
-			if id == 1 {
-				B = s.Item_emb
-			}
-			s.Teardown()
-		}(id)
-	}
-	wg.Wait()
-
-	// Converting every row to signed numbers. Nudge stores a negative value in
-	// a uint64 in two's complement, so the conversion is a reinterpretation of
-	// the bits.
-	rows := make([][]int64, B.NRows())
-	for c := range rows {
-		rows[c] = make([]int64, B.NCols())
-		for j := range rows[c] {
-			rows[c][j] = int64(*B.Get(uint64(c), uint64(j)))
-		}
-	}
-	return rows
-}
-
-// This function returns the number of ratings of every item in 'U'.
-func ratingsPerItem(U *share.Matrix[uint64]) []int {
-	count := make([]int, U.NCols())
-	for i := uint64(0); i < U.NRows(); i++ {
-		for j := uint64(0); j < U.NCols(); j++ {
-			if *U.Get(i, j) != 0 {
-				count[j]++
-			}
-		}
-	}
-	return count
-}
-
-// This function counts the users whose list holds the item 'target' under
-// the model 'B', and returns the count. It also prints one line with 'name',
-// the count, and how close the rows are to length 1 and to being orthogonal
-// to each other (see describeRows).
-func report(name string, U *share.Matrix[uint64], B [][]int64, target, decimals int) int {
-	// counting the users whose list holds the target item
-	n := 0
-	for _, list := range common.Recommendations(U, B, top) {
-		if slices.Contains(list, uint64(target)) {
-			n++
-		}
-	}
-	fmt.Printf("%s: target item in %d of %d lists, %s\n", name, n, U.NRows(), describeRows(B, decimals))
-	return n
-}
-
-// This function describes the rows of the model 'B', given as signed
-// fixed-point integers with 'decimals' fractional bits. An honest model has
-// rows of length 1 that are orthogonal to each other, up to rounding, so the
-// description shows whether a changed model still looks honest. It returns as
-// text the shortest and the longest row length, and the largest inner product
-// between two different rows. Two rows are orthogonal when their inner product
-// is 0, so a largest inner product near 0 means all rows are orthogonal.
-func describeRows(B [][]int64, decimals int) string {
-	shortest, longest, largest := math.Inf(1), 0.0, 0.0
-	for c := range B {
-		for d := c; d < len(B); d++ {
-			// computing the inner product of rows 'c' and 'd' in real units, in
-			// which a product of two entries has 2 * 'decimals' fractional bits
-			dot := 0.0
-			for j := range B[c] {
-				dot += float64(B[c][j]) * float64(B[d][j])
-			}
-			dot /= math.Ldexp(1, 2*decimals)
-
-			// A row's inner product with itself is its length squared, which
-			// updates the shortest and the longest length. Two different rows
-			// update the largest inner product.
-			if c == d {
-				shortest = math.Min(shortest, math.Sqrt(dot))
-				longest = math.Max(longest, math.Sqrt(dot))
-			} else {
-				largest = math.Max(largest, math.Abs(dot))
-			}
-		}
-	}
-	return fmt.Sprintf("row lengths between %.5f and %.5f, largest inner product between two rows %.1e", shortest, longest, largest)
 }

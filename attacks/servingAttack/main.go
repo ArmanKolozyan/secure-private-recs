@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"sort"
 
 	"github.com/NudgeArtifact/private-recs/attacks/common"
 	"github.com/NudgeArtifact/private-recs/params"
@@ -61,7 +60,7 @@ func main() {
 	// Choosing the 'top' items the malicious server puts in the victim's list.
 	// We choose the least-rated items, which honest Nudge recommends to nobody.
 	fmt.Println("choosing the least-rated items, which server 1 will put in the victim's list")
-	chosen := leastRated(U, top)
+	chosen := common.LeastRated(U, top)
 	fmt.Printf("chosen list:            %v\n", chosen)
 
 	// fetching the victim's list from honest servers
@@ -206,27 +205,4 @@ func list(U *share.Matrix[uint64], addrs [3]string, i uint64) []uint64 {
 	// returning the 'top' items with the highest scores among those the user
 	// has not rated, highest first, which are the items Nudge recommends
 	return common.TopItems(U, scores, i, top)
-}
-
-// This function returns the 'n' items with the fewest ratings in 'U', fewest
-// first, ties broken by the lower item number.
-func leastRated(U *share.Matrix[uint64], n int) []uint64 {
-	// counting the ratings of every item
-	count := make([]int, U.NCols())
-	for i := uint64(0); i < U.NRows(); i++ {
-		for j := uint64(0); j < U.NCols(); j++ {
-			if *U.Get(i, j) != 0 {
-				count[j]++
-			}
-		}
-	}
-
-	// ordering the items by their count, fewest first, keeping the lower item
-	// number first among equal counts
-	items := make([]uint64, U.NCols())
-	for j := range items {
-		items[j] = uint64(j)
-	}
-	sort.SliceStable(items, func(a, b int) bool { return count[items[a]] < count[items[b]] })
-	return items[:n]
 }
