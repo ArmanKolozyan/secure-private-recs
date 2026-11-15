@@ -34,3 +34,13 @@ var RevealHook func(truth []uint64) []uint64
 // it, since a correct share looks random, and hence a change to the share changes
 // the row by the same amount.
 var NormalizeHook func(server, component, step int, row *Matrix[Uint128])
+
+// This hook lets an experiment make server 0 change the result of the 0/1
+// check, in which the servers test that every entry of the ratings matrix is
+// 0 or 1. Each server holds a share of a sum that is 0 when every entry is 0
+// or 1. Servers 1 and 2 send their shares to server 0, which adds the three
+// shares and sends the sum back, and each server accepts the matrix when the
+// sum is 0. When the hook is not nil, server 0 calls it with the sum right
+// before it sends it, and the hook may change the sum. Servers 1 and 2 cannot
+// check it, since they know only their own shares.
+var CheckHook func(sum *Uint128)

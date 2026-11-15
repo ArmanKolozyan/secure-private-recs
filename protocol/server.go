@@ -244,6 +244,11 @@ func (s *Server) VerifyZeroOneEntries() bool {
 		s.network.RecvUint128(2, &tmp)
 		res_add.AddInPlace(&tmp)
 
+		// Letting server 0 change the sum it announces, if an experiment has
+		// attached CheckHook.
+		if CheckHook != nil {
+			CheckHook(res_add)
+		}
 		s.network.SendUint128(1, res_add)
 		s.network.SendUint128(2, res_add)
 	}
