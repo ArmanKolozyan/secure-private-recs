@@ -15,8 +15,8 @@ import (
 // This function counts the users whose list of 'n' items holds the item
 // 'target' under the model 'B', and returns the count. It also prints one line
 // with 'name', the count, and how close the rows are to length 1 and to being
-// orthogonal to each other (see describeRows). The entries of 'B' have
-// 'decimals' fractional bits.
+// orthogonal to each other (see the function 'describeRows'). The entries of
+// 'B' have 'decimals' fractional bits.
 func Report(name string, U *share.Matrix[uint64], B [][]int64, target uint64, n, decimals int) int {
 	// counting the users whose list holds the target item
 	count := 0

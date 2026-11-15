@@ -50,7 +50,8 @@ func LeastRated(U *share.Matrix[uint64], n int) []uint64 {
 }
 
 // This function returns the recommendation scores that Nudge's servers send
-// to user 'i' for the model 'B', honest or attacked (see Train), one per item.
+// to user 'i' for the model 'B', honest or attacked (see the function
+// 'Train'), one per item.
 // Nudge computes the user's embedding as the user's ratings row times the
 // transposed model, and the scores as that embedding times the model.
 // So the score of item j is the sum, over the rows of the model, of
@@ -99,7 +100,7 @@ func TopItems(U *share.Matrix[uint64], scores []int64, i uint64, n int) []uint64
 
 // This function returns every user's list of recommended items for the
 // model 'B', honest or attacked. A list holds the 'n' unrated items with the
-// highest scores (see Scores and TopItems), highest first.
+// highest scores (see the functions 'Scores' and 'TopItems'), highest first.
 func Recommendations(U *share.Matrix[uint64], B [][]int64, n int) [][]uint64 {
 	lists := make([][]uint64, U.NRows())
 	for i := range lists {
@@ -121,7 +122,8 @@ type ListChanges struct {
 }
 
 // This function computes the ListChanges between the lists 'first' and
-// 'second' of two models (see Recommendations), leaving out user 'victim'.
+// 'second' of two models (see the function 'Recommendations'), leaving out
+// user 'victim'.
 func CompareLists(first, second [][]uint64, victim uint64) ListChanges {
 	var changes ListChanges
 	for i := range first {

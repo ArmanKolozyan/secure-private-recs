@@ -26,13 +26,14 @@ func Train(U *share.Matrix[uint64], p *params.PowerItParams) [][]int64 {
 	return signedRows(B)
 }
 
-// This function trains the model on the ratings matrix 'U' with Nudge's three
-// servers, which run in this process and talk to each other over local network
-// connections, as in Nudge's own tests. Unlike Train, it runs the servers' own
-// code, so the hooks of the protocol package apply. All three servers end up
-// with the same model. The function returns server 1's copy, one row per
-// component, as signed fixed-point integers.
-func TrainWithServers(U *share.Matrix[uint64], p *params.PowerItParams) [][]int64 {
+// This function runs Nudge's three servers on the ratings matrix 'U'. The
+// servers run in this process and talk to each other over local network
+// connections, as in Nudge's own tests. The function splits 'U' into shares,
+// starts the servers, and calls 'run' on each of them, which makes the server
+// carry out a step of Nudge, such as the 0/1 check or the training. The three
+// calls run at the same time, since each server waits for messages from the
+// others.
+func RunServers(U *share.Matrix[uint64], run func(s *protocol.Server)) {
 	// splitting the ratings matrix into shares for the three servers
 	pool := share.InitPRGPoolFromMatrix(U)
 	U0, U1, U2 := share.ShareMatrixRSS(U, pool)
@@ -48,22 +49,38 @@ func TrainWithServers(U *share.Matrix[uint64], p *params.PowerItParams) [][]int6
 		null.Close()
 	}()
 
-	// running the three servers and keeping server 1's model
-	var B *share.Matrix[uint64]
+	// running the three servers
 	var wg sync.WaitGroup
 	wg.Add(3)
 	for id := 0; id < 3; id++ {
 		go func(id int) {
 			defer wg.Done()
 			s := protocol.LaunchServerFromMatrix(id, "127.0.0.1", "127.0.0.1", "127.0.0.1", shares[id])
-			s.PowerIteration(p, false, true)
-			if id == 1 {
-				B = s.Item_emb
-			}
+			run(s)
 			s.Teardown()
 		}(id)
 	}
 	wg.Wait()
+}
+
+// This function trains the model on the ratings matrix 'U' with Nudge's three
+// servers (see the function 'RunServers'). Nudge has two versions of the
+// training. The function 'Train' uses a simpler one, which does the work of
+// all three servers in a single function. This function uses the real one, in
+// which three servers send each other messages. The attacks that change such a
+// message need the real one, since their hooks are in the real servers. All
+// three servers end up with the same model. The function returns server 1's
+// copy, one row per component, as signed fixed-point integers.
+func TrainWithServers(U *share.Matrix[uint64], p *params.PowerItParams) [][]int64 {
+	var B *share.Matrix[uint64]
+	RunServers(U, func(s *protocol.Server) {
+		s.PowerIteration(p, false, true)
+
+		// keeping server 1's model
+		if s.Id == 1 {
+			B = s.Item_emb
+		}
+	})
 	return signedRows(B)
 }
 
