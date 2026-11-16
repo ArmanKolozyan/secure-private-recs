@@ -35,6 +35,21 @@ var RevealHook func(truth []uint64) []uint64
 // the row by the same amount.
 var NormalizeHook func(server, component, step int, row *Matrix[Uint128])
 
+// This hook lets an experiment make server 0 change a row of the model while
+// the servers compute it. After a multiplication, the servers run Trunc, which
+// drops the extra fractional bits of the product. In every Trunc, server 0 is
+// the dealer. For every entry, it sends server 1 and server 2 each a message.
+// A message holds a number that the server subtracts from its share of the
+// result. Normalize, which scales the row to length 1, ends with a Trunc
+// followed by a Reshare. When the hook is not nil, server 0 calls it in this
+// last Trunc, once for every entry of the row, right before it sends the
+// entry's two messages. It passes the component and the step of the power
+// iteration (both counted from 0), the index of the entry, which is the index
+// of its item, and the messages for servers 1 and 2. The hook may change the
+// messages. Servers 1 and 2 cannot check them, since a correct message looks
+// random.
+var TruncHook func(component, step int, entry uint64, msg1, msg2 *TruncKey)
+
 // This hook lets an experiment make server 0 change the result of the 0/1
 // check, in which the servers test that every entry of the ratings matrix is
 // 0 or 1. Each server holds a share of a sum that is 0 when every entry is 0

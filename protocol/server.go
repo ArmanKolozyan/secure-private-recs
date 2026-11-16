@@ -27,7 +27,8 @@ type Server struct {
 	network *net.Network
 	prgs    []*rand.PrgPool // shared secrets with other servers (own prgs are at position 'Id', shared prgs are at position '4')
 
-	component, step int // where the power iteration is, which NormalizeHook gets
+	component, step int  // where the power iteration is, which NormalizeHook and TruncHook get
+	lastTrunc       bool // true during the last Trunc of Normalize, the only Trunc in which server 0 calls TruncHook
 }
 
 // For now: server initiating connection picks shared seeds
@@ -492,7 +493,7 @@ func (s *Server) truncateRSSToAdditive128(src *Share128, decimals uint) *Uint128
 
 func (s *Server) truncateRSSToAdditive128Dst(src *Share128, dst *Uint128, decimals uint, prgIndex uint64) {
 	dstToSquare := MakeUint128(0, 0)
-	s.truncateRSSToAdditivePart1Write(src, dst, decimals, prgIndex)
+	s.truncateRSSToAdditivePart1Write(src, dst, decimals, prgIndex, 0 /* entry */)
 	s.SendMsgs()
 
 	s.truncateRSSToAdditivePart1Read(src, dst, dstToSquare, decimals)
@@ -509,9 +510,15 @@ func (s *Server) truncateRSSToAdditive128Dst(src *Share128, dst *Uint128, decima
 	wg.Wait()
 }
 
-func (s *Server) truncateRSSToAdditivePart1Write(src *Share128, dst *Uint128, decimals uint, prgIndex uint64) {
+func (s *Server) truncateRSSToAdditivePart1Write(src *Share128, dst *Uint128, decimals uint, prgIndex, entry uint64) {
 	if s.Id == 0 {
 		truncKeyL, truncKeyR := DealerTruncateRSSToAdditive128(src, decimals, s.prgs[s.Id].At(prgIndex))
+
+		// Letting server 0 change the two messages it sends for this entry in
+		// the last Trunc of Normalize, if an experiment has attached TruncHook.
+		if TruncHook != nil && s.lastTrunc {
+			TruncHook(s.component, s.step, entry, truncKeyL, truncKeyR)
+		}
 		s.network.AppendTruncKey(1, truncKeyL)
 		s.network.AppendTruncKey(2, truncKeyR)
 		Clear(dst)
@@ -550,7 +557,7 @@ func (s *Server) MatrixTruncateRSSToAdditive(m *Matrix[Share128], out *Matrix[Ui
 
 	for i := uint64(0); i < rows; i++ {
 		for j := uint64(0); j < cols; j++ {
-			s.truncateRSSToAdditivePart1Write(&m.Data[i*cols+j], &out.Data[i*cols+j], decimals, i%s.prgs[0].Len())
+			s.truncateRSSToAdditivePart1Write(&m.Data[i*cols+j], &out.Data[i*cols+j], decimals, i%s.prgs[0].Len(), i*cols+j)
 		}
 	}
 
@@ -842,8 +849,13 @@ func (s *Server) VectorNormalizeRSSInPlace(v *Matrix[Share128], decimals, norm_d
 	// to RSS
 	s.MatrixAdditiveToRSSDst(v_add, v)
 
+	// Marking the next Trunc as the last one of Normalize, in which server 0
+	// calls TruncHook, if an experiment has attached it.
+	s.lastTrunc = true
+
 	// truncate again
 	s.MatrixTruncateRSSToAdditive(v, v_add, norm_decimals)
+	s.lastTrunc = false
 
 	// Letting this server change its share of the row before the last
 	// Reshare, if an experiment has attached NormalizeHook.
